@@ -1,0 +1,268 @@
+/* ── Keyframes ── */
+@keyframes fadeDown {
+    from { opacity: 0; transform: translateY(-20px); }
+    to   { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes fadeUp {
+    from { opacity: 0; transform: translateY(30px); }
+    to   { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; }
+    to   { opacity: 1; }
+}
+
+@keyframes slideUpCard {
+    from { opacity: 0; transform: translateY(40px) scale(0.97); }
+    to   { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+@keyframes pulse-cta {
+    0%, 100% { box-shadow: 0 0 0 0 rgba(255,255,255,0.3); }
+    50%       { box-shadow: 0 0 0 10px rgba(255,255,255,0); }
+}
+
+/* ── Header ── */
+.siteHeader {
+    position: absolute;
+    top: 0;
+    width: 100%;
+    padding: 20px 40px;
+    animation: fadeDown 0.6s ease both;
+}
+
+.nav {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.brand {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    font-family: 'Poppins', sans-serif;
+    font-weight: 500;
+    font-size: 1.1rem;
+    color: white;
+    text-decoration: none;
+    letter-spacing: 0.5px;
+    transition: opacity 0.2s ease;
+}
+
+.brand:hover { opacity: 0.85; }
+
+.logo {
+    height: 40px;
+    width: auto;
+    transition: transform 0.3s ease;
+}
+
+.brand:hover .logo { transform: rotate(-5deg) scale(1.05); }
+
+.navButtons {
+    display: flex;
+    gap: 15px;
+    align-items: center;
+}
+
+.navCta {
+    padding: 10px 20px;
+    border-radius: 25px;
+    border: 1px solid rgba(255, 255, 255, 0.4);
+    color: white;
+    text-decoration: none;
+    font-size: 0.9rem;
+    backdrop-filter: blur(10px);
+    transition: background 0.25s ease, transform 0.2s ease, box-shadow 0.2s ease;
+    position: relative;
+    overflow: hidden;
+}
+
+.navCta::after {
+    content: '';
+    position: absolute;
+    top: 0; left: -100%;
+    width: 60%; height: 100%;
+    background: linear-gradient(120deg, transparent 0%, rgba(255,255,255,0.2) 50%, transparent 100%);
+    transition: left 0.4s ease;
+    pointer-events: none;
+}
+
+.navCta:hover::after { left: 160%; }
+
+.navCta:hover {
+    background: rgba(255, 255, 255, 0.15);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 14px rgba(0,0,0,0.15);
+}
+
+.navCta:active { transform: translateY(0); }
+
+.secondary {
+    background: rgba(255, 255, 255, 0.15);
+    border: none;
+}
+
+.secondary:hover {
+    background: rgba(255, 255, 255, 0.3);
+    transform: translateY(-2px);
+}
+
+/* ── Hero ── */
+.hero {
+    padding: 40px 40px 10px 40px;
+    color: white;
+}
+
+.heroInner {
+    width: min(1100px, calc(100% - 40px));
+    margin: 0 auto;
+    padding: 92px 0 30px;
+    text-align: center;
+}
+
+.heroTagline {
+    font-family: 'Montserrat', sans-serif;
+    font-weight: 700;
+    font-size: 0.95rem;
+    color: white;
+    margin-bottom: 10px;
+    margin-top: 0px;
+    animation: fadeIn 0.7s ease 0.3s both;
+}
+
+.heroInner h1 {
+    font-family: 'Poppins', sans-serif;
+    font-weight: 600;
+    font-size: 4.3rem;
+    line-height: 0.9;
+    margin: 20px auto;
+    margin-top: 40px;
+    max-width: 800px;
+    letter-spacing: 0.5px;
+    margin-bottom: 40px;
+    animation: fadeUp 0.8s cubic-bezier(0.22,1,0.36,1) 0.45s both;
+}
+
+.heroSub {
+    font-family: 'Montserrat', sans-serif;
+    font-weight: 300;
+    font-size: 1.2rem;
+    opacity: 0.95;
+    animation: fadeUp 0.7s ease 0.65s both;
+}
+
+.heroCta {
+    display: inline-block;
+    margin-top: 25px;
+    padding: 14px 35px;
+    background: rgba(255, 255, 255, 0.25);
+    border: 2px solid rgba(255, 255, 255, 0.5);
+    border-radius: 30px;
+    color: white;
+    text-decoration: none;
+    font-family: 'Montserrat', sans-serif;
+    font-weight: 500;
+    font-size: 1rem;
+    letter-spacing: 1px;
+    backdrop-filter: blur(10px);
+    animation: fadeUp 0.7s ease 0.85s both;
+    transition: background 0.25s ease, border-color 0.25s ease, transform 0.22s ease, box-shadow 0.22s ease;
+    position: relative;
+    overflow: hidden;
+}
+
+/* Brillo que barre el botón al hover */
+.heroCta::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 60%;
+    height: 100%;
+    background: linear-gradient(120deg, transparent 0%, rgba(255,255,255,0.25) 50%, transparent 100%);
+    transition: left 0.45s ease;
+    pointer-events: none;
+}
+
+.heroCta:hover::after { left: 160%; }
+
+.heroCta:hover {
+    background: rgba(255, 255, 255, 0.35);
+    border-color: rgba(255, 255, 255, 0.75);
+    transform: translateY(-3px) scale(1.03);
+    box-shadow: 0 10px 30px rgba(0,0,0,0.22);
+}
+
+.heroCta:active { transform: translateY(0) scale(0.98); }
+
+/* ── Cards de proceso ── */
+.steps {
+    margin-top: 28px;
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 16px;
+}
+
+.process {
+    padding: 0.1px;
+    text-align: center;
+    color: white;
+}
+
+.container {
+    max-width: 1100px;
+    margin: 0 auto;
+    padding: 0 40px;
+}
+
+.process h2 {
+    font-family: 'Poppins', sans-serif;
+    font-weight: 600;
+    font-size: 2rem;
+    margin-bottom: 10px;
+    letter-spacing: 0.5px;
+    animation: fadeUp 0.7s ease 0.5s both;
+}
+
+.step {
+    border: 1px solid #eee;
+    border-radius: 18px;
+    padding: 18px;
+    display: flex;
+    gap: 14px;
+    align-items: flex-start;
+    background: rgba(255, 255, 255, 0.3);
+    backdrop-filter: blur(10px);
+    animation: slideUpCard 0.6s cubic-bezier(0.22,1,0.36,1) both;
+    transition: transform 0.25s ease, box-shadow 0.25s ease, background 0.25s ease;
+}
+
+.step:nth-child(1) { animation-delay: 0.6s; }
+.step:nth-child(2) { animation-delay: 0.75s; }
+.step:nth-child(3) { animation-delay: 0.9s; }
+
+.step:hover {
+    transform: translateY(-6px) scale(1.02);
+    box-shadow: 0 12px 32px rgba(0,0,0,0.18);
+    background: rgba(255, 255, 255, 0.42);
+}
+
+.stepBody h3 {
+    font-family: 'Montserrat', sans-serif;
+    font-weight: 400;
+    padding: 10px;
+    font-size: 1.3rem;
+    color: white;
+    margin: 0;
+}
+
+.stepBody p {
+    font-family: 'Montserrat', sans-serif;
+    font-weight: 300;
+    margin-top: 6px;
+    color: rgba(255, 255, 255, 0.9);
+}
