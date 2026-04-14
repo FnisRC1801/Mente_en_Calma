@@ -202,9 +202,9 @@
 /* ── Cards de proceso ── */
 .steps {
     margin-top: 28px;
-    display: grid;
-    grid-template-columns: repeat(3, 1fr);
+    display: flex;
     gap: 16px;
+    align-items: stretch;
 }
 
 .process {
@@ -229,40 +229,109 @@
 }
 
 .step {
-    border: 1px solid #eee;
+    flex: 1;
+    border: 1px solid rgba(255,255,255,0.25);
     border-radius: 18px;
-    padding: 18px;
+    padding: 20px;
     display: flex;
-    gap: 14px;
-    align-items: flex-start;
-    background: rgba(255, 255, 255, 0.3);
+    flex-direction: column;
+    gap: 10px;
+    background: rgba(255, 255, 255, 0.18);
     backdrop-filter: blur(10px);
     animation: slideUpCard 0.6s cubic-bezier(0.22,1,0.36,1) both;
-    transition: transform 0.25s ease, box-shadow 0.25s ease, background 0.25s ease;
+    transition: flex 0.45s cubic-bezier(0.22,1,0.36,1),
+                box-shadow 0.35s ease,
+                background 0.35s ease,
+                padding 0.35s ease;
+    overflow: hidden;
+    cursor: pointer;
+    min-width: 0;
 }
 
 .step:nth-child(1) { animation-delay: 0.6s; }
 .step:nth-child(2) { animation-delay: 0.75s; }
 .step:nth-child(3) { animation-delay: 0.9s; }
 
+/* Los no-hover se encogen */
+.steps:has(.step:hover) .step { flex: 0.55; }
+
+/* El hover se expande */
 .step:hover {
-    transform: translateY(-6px) scale(1.02);
-    box-shadow: 0 12px 32px rgba(0,0,0,0.18);
-    background: rgba(255, 255, 255, 0.42);
+    flex: 2.4 !important;
+    box-shadow: 0 20px 48px rgba(0,0,0,0.28);
+    background: rgba(255, 255, 255, 0.38);
+    padding: 24px;
 }
 
+/* Imagen */
+.stepImg {
+    width: 100%;
+    height: 0;
+    overflow: hidden;
+    border-radius: 12px;
+    transition: height 0.45s cubic-bezier(0.22,1,0.36,1), opacity 0.35s ease;
+    opacity: 0;
+    flex-shrink: 0;
+}
+
+.step:hover .stepImg {
+    height: 130px;
+    opacity: 1;
+}
+
+.stepImg img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    border-radius: 12px;
+}
+
+/* Título */
 .stepBody h3 {
-    font-family: 'Montserrat', sans-serif;
-    font-weight: 400;
-    padding: 10px;
-    font-size: 1.3rem;
+    font-family: 'Poppins', sans-serif;
+    font-weight: 700;
+    font-size: 1.1rem;
     color: white;
     margin: 0;
+    padding: 0;
+    transition: font-size 0.35s ease;
+}
+
+.step:hover .stepBody h3 {
+    font-size: 1.4rem;
 }
 
 .stepBody p {
     font-family: 'Montserrat', sans-serif;
     font-weight: 300;
+    font-size: 0.85rem;
     margin-top: 6px;
-    color: rgba(255, 255, 255, 0.9);
+    color: rgba(255, 255, 255, 0.85);
+    line-height: 1.5;
+    transition: font-size 0.3s ease;
+}
+
+.step:hover .stepBody p {
+    font-size: 0.95rem;
+}
+
+/* Texto extra */
+.stepExtra {
+    max-height: 0;
+    overflow: hidden;
+    transition: max-height 0.45s cubic-bezier(0.22,1,0.36,1), opacity 0.35s ease, padding-top 0.35s ease;
+    opacity: 0;
+    font-family: 'Montserrat', sans-serif;
+    font-size: 0.85rem;
+    color: rgba(255,255,255,0.8);
+    line-height: 1.6;
+    border-top: 1px solid rgba(255,255,255,0.2);
+    padding-top: 0;
+    text-align: left;
+}
+
+.step:hover .stepExtra {
+    max-height: 120px;
+    opacity: 1;
+    padding-top: 10px;
 }

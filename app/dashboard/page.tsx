@@ -113,6 +113,12 @@ export default function Dashboard() {
               <input placeholder="Buscar citas, médicos..." style={{ border: "none", outline: "none", fontSize: "0.83rem", color: "#374151", width: 180, background: "transparent" }} />
             </div>
             <button style={{ fontSize: "1.1rem", background: "none", border: "none", cursor: "pointer", color: "#6b7280" }}>🔔</button>
+            <button
+              onClick={() => signOut(auth).then(() => router.replace("/login"))}
+              className="btn-secondary"
+              style={{ display: "flex", alignItems: "center", gap: 6, border: "1px solid #d1d5db", borderRadius: 10, padding: "8px 14px", color: "#374151", fontFamily: "'Poppins',sans-serif", fontWeight: 600, fontSize: "0.83rem", cursor: "pointer", background: "white" }}>
+              Cerrar sesión
+            </button>
             <button className="btn-primary" style={{ display: "flex", alignItems: "center", gap: 6, background: "linear-gradient(135deg,#6b9e9a,#2d6560)", border: "none", borderRadius: 10, padding: "8px 16px", color: "white", fontFamily: "'Poppins',sans-serif", fontWeight: 600, fontSize: "0.83rem", cursor: "pointer", position: "relative", overflow: "hidden" }}>
               + Agendar Nueva Cita
             </button>

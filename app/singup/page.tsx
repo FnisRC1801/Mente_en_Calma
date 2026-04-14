@@ -3,6 +3,8 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
+import { createUserWithEmailAndPassword, updateProfile } from "firebase/auth";
+import { auth } from "@/lib/firebase-client";
 
 function getStrength(pwd: string): { label: string; color: string; width: string } {
     const hasMin5Letters = (pwd.match(/[a-zA-Z]/g) || []).length >= 5;
@@ -22,8 +24,13 @@ function getStrength(pwd: string): { label: string; color: string; width: string
 
 export default function SignUp() {
     const router = useRouter();
+    const [name, setName] = useState("");
+    const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
+    const [confirmPassword, setConfirmPassword] = useState("");
     const [pwdError, setPwdError] = useState("");
+    const [error, setError] = useState("");
+    const [loading, setLoading] = useState(false);
     const strength = getStrength(password);
 
     function handlePasswordChange(e: React.ChangeEvent<HTMLInputElement>) {
@@ -33,6 +40,35 @@ export default function SignUp() {
         const numbers = (val.match(/\d/g) || []).length;
         setPwdError(letters < 5 || numbers < 1 ? "Mínimo 5 letras y 1 número" : "");
     }
+
+    const handleRegister = async () => {
+        setError("");
+
+        if (pwdError) {
+            setError("La contraseña no cumple los requisitos.");
+            return;
+        }
+
+        if (password !== confirmPassword) {
+            setError("Las contraseñas no coinciden.");
+            return;
+        }
+
+        try {
+            setLoading(true);
+            const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+            await updateProfile(userCredential.user, { displayName: name });
+            router.push("/login");
+        } catch (err: any) {
+            if (err.code === "auth/email-already-in-use") {
+                setError("Este correo ya está registrado.");
+            } else {
+                setError("Error al crear la cuenta. Intenta de nuevo.");
+            }
+        } finally {
+            setLoading(false);
+        }
+    };
 
     return (
         <div className="relative min-h-screen" style={{ background: "linear-gradient(to bottom, #5f817d, #0f1e33)" }}>
@@ -51,7 +87,6 @@ export default function SignUp() {
             </header>
 
             <div className="flex items-center justify-center min-h-screen px-4 pt-24 pb-8">
-                {/* Recuadro completo entra como una sola pieza */}
                 <div className="anim-card-wrapper w-full max-w-4xl rounded-3xl shadow-2xl overflow-hidden flex min-h-[540px]">
 
                     {/* Panel izquierdo */}
@@ -68,7 +103,7 @@ export default function SignUp() {
                         </div>
                     </div>
 
-                    {/* Panel derecho — blanco */}
+                    {/* Panel derecho */}
                     <div className="flex-1 flex flex-col justify-center px-8 py-10" style={{ background: "white" }}>
 
                         <h1 className="anim-title" style={{ fontFamily: "'Poppins', sans-serif", fontWeight: 700, fontSize: "1.7rem", color: "#1a2e2c", margin: 0 }}>
@@ -77,6 +112,12 @@ export default function SignUp() {
                         <p className="anim-title" style={{ marginTop: 4, fontSize: "0.9rem", color: "#6b7280", marginBottom: 24 }}>
                             Completa tus datos para comenzar.
                         </p>
+
+                        {error && (
+                            <p style={{ color: "#dc2626", fontSize: "0.85rem", marginBottom: 12, background: "#fef2f2", padding: "8px 12px", borderRadius: 8 }}>
+                                {error}
+                            </p>
+                        )}
 
                         <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
 
@@ -89,7 +130,7 @@ export default function SignUp() {
                                     <svg viewBox="0 0 24 24" style={{ width: 16, height: 16, color: "#9ca3af", flexShrink: 0 }} fill="none" stroke="currentColor" strokeWidth="2">
                                         <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" /><circle cx="12" cy="7" r="4" />
                                     </svg>
-                                    <input type="text" placeholder="Ej. Juan Pérez"
+                                    <input type="text" placeholder="Ej. Juan Pérez" value={name} onChange={e => setName(e.target.value)}
                                         style={{ flex: 1, background: "transparent", border: "none", outline: "none", fontSize: "0.9rem", color: "#111827" }} />
                                 </div>
                             </div>
@@ -103,7 +144,7 @@ export default function SignUp() {
                                     <svg viewBox="0 0 24 24" style={{ width: 16, height: 16, color: "#9ca3af", flexShrink: 0 }} fill="none" stroke="currentColor" strokeWidth="2">
                                         <rect x="2" y="4" width="20" height="16" rx="2" /><path d="m2 7 10 7 10-7" />
                                     </svg>
-                                    <input type="email" placeholder="ejemplo@correo.com"
+                                    <input type="email" placeholder="ejemplo@correo.com" value={email} onChange={e => setEmail(e.target.value)}
                                         style={{ flex: 1, background: "transparent", border: "none", outline: "none", fontSize: "0.9rem", color: "#111827" }} />
                                 </div>
                             </div>
@@ -141,7 +182,7 @@ export default function SignUp() {
                                     <svg viewBox="0 0 24 24" style={{ width: 16, height: 16, color: "#9ca3af", flexShrink: 0 }} fill="none" stroke="currentColor" strokeWidth="2">
                                         <rect x="3" y="11" width="18" height="11" rx="2" /><path d="M7 11V7a5 5 0 0 1 10 0v4" />
                                     </svg>
-                                    <input type="password" placeholder="••••••••"
+                                    <input type="password" placeholder="••••••••" value={confirmPassword} onChange={e => setConfirmPassword(e.target.value)}
                                         style={{ flex: 1, background: "transparent", border: "none", outline: "none", fontSize: "0.9rem", color: "#111827" }} />
                                 </div>
                             </div>
@@ -156,12 +197,19 @@ export default function SignUp() {
 
                             {/* Botón principal */}
                             <div className="anim-btn">
-                                <button type="button" onClick={() => router.push("/login")} className="btn-primary"
-                                    style={{ width: "100%", background: "linear-gradient(135deg, #6b9e9a, #2d6560)", border: "none", borderRadius: 12, padding: "12px", color: "white", fontFamily: "'Poppins', sans-serif", fontWeight: 600, fontSize: "0.95rem", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", gap: 8 }}>
-                                    Crear Cuenta
-                                    <svg viewBox="0 0 24 24" style={{ width: 16, height: 16 }} fill="none" stroke="currentColor" strokeWidth="2.5">
-                                        <path d="M5 12h14M13 6l6 6-6 6" />
-                                    </svg>
+                                <button
+                                    type="button"
+                                    onClick={handleRegister}
+                                    disabled={loading}
+                                    className="btn-primary"
+                                    style={{ width: "100%", background: loading ? "#9ca3af" : "linear-gradient(135deg, #6b9e9a, #2d6560)", border: "none", borderRadius: 12, padding: "12px", color: "white", fontFamily: "'Poppins', sans-serif", fontWeight: 600, fontSize: "0.95rem", cursor: loading ? "not-allowed" : "pointer", display: "flex", alignItems: "center", justifyContent: "center", gap: 8 }}
+                                >
+                                    {loading ? "Creando cuenta..." : "Crear Cuenta"}
+                                    {!loading && (
+                                        <svg viewBox="0 0 24 24" style={{ width: 16, height: 16 }} fill="none" stroke="currentColor" strokeWidth="2.5">
+                                            <path d="M5 12h14M13 6l6 6-6 6" />
+                                        </svg>
+                                    )}
                                 </button>
                             </div>
 
