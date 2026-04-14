@@ -43,9 +43,6 @@ export default function Login() {
             <img src="https://static.vecteezy.com/system/resources/thumbnails/011/653/087/small_2x/psychology-3d-render-icon-illustration-png.png" alt="Mente en Calma" className="brand-logo" style={{ height: 40, width: "auto" }} />
             <span>Mente en Calma</span>
           </a>
-          <a href="/" className="nav-link btn-back" style={{ padding: "10px 20px", borderRadius: 25, border: "1px solid rgba(255,255,255,0.4)", color: "white", fontSize: "0.9rem", backdropFilter: "blur(10px)" }}>
-            Volver al inicio
-          </a>
         </nav>
       </header>
 
@@ -54,8 +51,8 @@ export default function Login() {
 
           {/* Panel izquierdo */}
           <div className="hidden md:flex md:w-2/5 relative flex-col justify-end p-8"
-            style={{ background: "linear-gradient(to bottom, #7aada8 0%, #4a8a85 35%, #2a5f5a 65%, #0f2a28 100%)" }}>
-            <div style={{ position: "absolute", inset: 0, background: "linear-gradient(to bottom, transparent 40%, rgba(8,22,28,0.8) 100%)" }} />
+            style={{ backgroundImage: "url('https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=800&q=80')", backgroundSize: "cover", backgroundPosition: "center" }}>
+            <div style={{ position: "absolute", inset: 0, background: "linear-gradient(to bottom, rgba(74,138,133,0.35) 0%, rgba(15,42,40,0.88) 100%)" }} />
             <div style={{ position: "relative", zIndex: 10 }}>
               <h2 style={{ fontFamily: "'Poppins', sans-serif", fontWeight: 600, fontSize: "1.6rem", color: "white", lineHeight: 1.2 }}>
                 Un espacio para ti
