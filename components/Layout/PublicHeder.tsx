@@ -26,7 +26,10 @@ function PublicHeder() {
                         <p className={styles.heroSub}>
                             Encuentra el equilibrio que mereces, ayudanos a ayudarte.
                         </p>
-                        <a href="/singup" className={styles.heroCta}>ÚNETE AHORA</a>
+                        <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 12, marginTop: 25 }}>
+                            <a href="/singup" className={styles.heroCta} style={{ marginTop: 0 }}>ÚNETE AHORA</a>
+                            <a href="/login-psico" className={styles.heroCtaPsico} style={{ marginTop: 0 }}>¿Deseas impartir como médico? Registrate ahora!!</a>
+                        </div>
                     </div>
 
                     <section id="proceso" className={`${styles.section} ${styles.process}`}>
@@ -35,7 +38,7 @@ function PublicHeder() {
                             <div className={styles.steps}>
                                 <div className={styles.step}>
                                     <div className={styles.stepImg}>
-                                        <img src="https://images.unsplash.com/photo-1576091160550-2173dba999ef?w=400&q=80" alt="Pacientes" />
+                                        <img src="https://media.gq.com.mx/photos/61db416eed3f3306292cf94d/16:9/w_2560%2Cc_limit/emociones.jpg" alt="Pacientes" />
                                     </div>
                                     <div className={styles.stepBody}>
                                         <h3>+1000 Pacientes</h3>
@@ -55,7 +58,7 @@ function PublicHeder() {
                                 </div>
                                 <div className={styles.step}>
                                     <div className={styles.stepImg}>
-                                        <img src="https://images.unsplash.com/photo-1551836022-d5d88e9218df?w=400&q=80" alt="Seguimiento" />
+                                        <img src="https://i.pinimg.com/736x/82/8f/64/828f64fa174f4890d9c5e2f6e0112bc1.jpg" alt="Seguimiento" />
                                     </div>
                                     <div className={styles.stepBody}>
                                         <h3>Seguimiento constante</h3>

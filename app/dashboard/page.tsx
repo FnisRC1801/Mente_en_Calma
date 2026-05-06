@@ -18,10 +18,8 @@ const citas = [
   { nombre: "Dr. Michael Chen",   especialidad: "Manejo del Estrés",            fecha: "30 de Oct, 2023", hora: "04:30 PM",            lugar: "Consultorio Presencial", estado: "PENDIENTE", estadoColor: "#d97706", avatar: "👨‍⚕️" },
 ];
 
-// Calendario — Octubre 2023
 const diasSemana = ["LUN","MAR","MIÉ","JUE","VIE","SÁB","DOM"];
-// Oct 2023 empieza en domingo (índice 6 en lun-dom), 31 días
-const primerDia = 6; // domingo
+const primerDia = 6;
 const totalDias = 31;
 
 const eventosCalendario: Record<number, { hora: string; doctor: string; color: string }> = {
@@ -55,7 +53,6 @@ export default function Dashboard() {
     </div>
   );
 
-  // Construir celdas del calendario
   const celdas: (number | null)[] = [
     ...Array(primerDia).fill(null),
     ...Array.from({ length: totalDias }, (_, i) => i + 1),
@@ -65,9 +62,8 @@ export default function Dashboard() {
   return (
     <div style={{ display: "flex", minHeight: "100vh", backgroundColor: "#f0f4f3" }}>
 
-      {/* ── Sidebar ── */}
+      {/* Sidebar */}
       <aside style={{ width: 210, background: "white", borderRight: "1px solid #e2ebe9", display: "flex", flexDirection: "column", padding: "24px 0", position: "fixed", top: 0, left: 0, height: "100vh", zIndex: 10 }}>
-        {/* Logo */}
         <div style={{ display: "flex", alignItems: "center", gap: 10, padding: "0 20px 28px" }}>
           <div style={{ width: 34, height: 34, borderRadius: 10, background: "linear-gradient(135deg,#6b9e9a,#2d6560)", display: "flex", alignItems: "center", justifyContent: "center" }}>
             <img src="https://static.vecteezy.com/system/resources/thumbnails/011/653/087/small_2x/psychology-3d-render-icon-illustration-png.png" alt="" style={{ width: 22, height: 22, objectFit: "cover", borderRadius: 5 }} />
@@ -75,7 +71,6 @@ export default function Dashboard() {
           <span style={{ fontFamily: "'Poppins',sans-serif", fontWeight: 700, fontSize: "0.9rem", color: "#1a2e2c" }}>Mente en Calma</span>
         </div>
 
-        {/* Nav */}
         <nav style={{ flex: 1, display: "flex", flexDirection: "column", gap: 2, padding: "0 10px" }}>
           {navItems.map(item => (
             <button key={item.id} onClick={() => setActive(item.id)}
@@ -85,7 +80,6 @@ export default function Dashboard() {
           ))}
         </nav>
 
-        {/* Usuario */}
         <div style={{ padding: "14px 16px", borderTop: "1px solid #e2ebe9", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
           <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
             <div style={{ width: 34, height: 34, borderRadius: "50%", background: "linear-gradient(135deg,#7aada8,#4a8a85)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "0.95rem" }}>👤</div>
@@ -101,7 +95,7 @@ export default function Dashboard() {
         </div>
       </aside>
 
-      {/* ── Main ── */}
+      {/* Main */}
       <main style={{ marginLeft: 210, flex: 1, padding: "24px 28px" }}>
 
         {/* Topbar */}
@@ -134,7 +128,7 @@ export default function Dashboard() {
               ¡Hola, {displayName}!
             </h2>
             <p style={{ margin: 0, fontSize: "0.85rem", color: "rgba(255,255,255,0.8)", maxWidth: 380 }}>
-              Tienes una sesión programada para mañana a las 10:00 AM con la Dra. Jenkins. Recuerda completar el formulario previo.
+              Tienes una sesión programada para mañana a las 10:00 AM con la Dra. Jenkins.
             </p>
           </div>
           <div style={{ display: "flex", gap: 12, position: "relative", zIndex: 1 }}>
@@ -165,8 +159,6 @@ export default function Dashboard() {
                 <div key={i} style={{ background: "white", borderRadius: 14, padding: 18, border: "1px solid #e2ebe9", boxShadow: "0 2px 8px rgba(42,95,90,0.05)", transition: "transform 0.2s ease, box-shadow 0.2s ease" }}
                   onMouseEnter={e => { (e.currentTarget as HTMLDivElement).style.transform = "translateY(-2px)"; (e.currentTarget as HTMLDivElement).style.boxShadow = "0 6px 20px rgba(42,95,90,0.1)"; }}
                   onMouseLeave={e => { (e.currentTarget as HTMLDivElement).style.transform = "translateY(0)"; (e.currentTarget as HTMLDivElement).style.boxShadow = "0 2px 8px rgba(42,95,90,0.05)"; }}>
-
-                  {/* Header */}
                   <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 12 }}>
                     <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
                       <div style={{ width: 46, height: 46, borderRadius: 10, background: "linear-gradient(135deg,#7aada822,#4a8a8533)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "1.5rem" }}>{cita.avatar}</div>
@@ -179,8 +171,6 @@ export default function Dashboard() {
                       {cita.estado}
                     </span>
                   </div>
-
-                  {/* Info */}
                   <div style={{ display: "flex", gap: 20, marginBottom: 14 }}>
                     {[{ icon: "📅", text: cita.fecha }, { icon: "🕐", text: cita.hora }, { icon: "📍", text: cita.lugar }].map((d, j) => (
                       <div key={j} style={{ display: "flex", alignItems: "center", gap: 5 }}>
@@ -189,8 +179,6 @@ export default function Dashboard() {
                       </div>
                     ))}
                   </div>
-
-                  {/* Botones */}
                   <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>
                     <button className="btn-primary" style={{ background: i === 0 ? "linear-gradient(135deg,#6b9e9a,#2d6560)" : "none", border: i === 0 ? "none" : "1px solid #e2ebe9", borderRadius: 9, padding: "8px", color: i === 0 ? "white" : "#374151", fontWeight: 600, fontSize: "0.8rem", cursor: "pointer", position: "relative", overflow: "hidden", display: "flex", alignItems: "center", justifyContent: "center", gap: 6 }}>
                       {i === 0 ? "📨 Enviar mensaje" : "🔄 Reprogramar"}
@@ -212,9 +200,7 @@ export default function Dashboard() {
               <span>📅</span>
               <h3 style={{ fontFamily: "'Poppins',sans-serif", fontWeight: 600, fontSize: "0.95rem", color: "#1a2e2c", margin: 0 }}>Calendario Mensual</h3>
             </div>
-
             <div style={{ background: "white", borderRadius: 14, padding: 18, border: "1px solid #e2ebe9", boxShadow: "0 2px 8px rgba(42,95,90,0.05)" }}>
-              {/* Mes */}
               <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 14 }}>
                 <span style={{ fontFamily: "'Poppins',sans-serif", fontWeight: 600, fontSize: "0.92rem", color: "#1a2e2c" }}>Octubre 2023</span>
                 <div style={{ display: "flex", gap: 4 }}>
@@ -225,21 +211,17 @@ export default function Dashboard() {
                   ))}
                 </div>
               </div>
-
-              {/* Días semana */}
               <div style={{ display: "grid", gridTemplateColumns: "repeat(7,1fr)", marginBottom: 6 }}>
                 {diasSemana.map(d => (
                   <div key={d} style={{ textAlign: "center", fontSize: "0.62rem", fontWeight: 600, color: "#9ca3af", padding: "4px 0" }}>{d}</div>
                 ))}
               </div>
-
-              {/* Celdas */}
               <div style={{ display: "grid", gridTemplateColumns: "repeat(7,1fr)", gap: 2 }}>
                 {celdas.map((dia, idx) => {
                   const esHoy = dia === 26;
                   const tieneEvento = dia !== null && eventosCalendario[dia];
                   return (
-                    <div key={idx} style={{ textAlign: "center", padding: "5px 2px", borderRadius: 7, background: esHoy ? "linear-gradient(135deg,#6b9e9a,#2d6560)" : "transparent", cursor: dia ? "pointer" : "default", transition: "background 0.15s ease", position: "relative" }}
+                    <div key={idx} style={{ textAlign: "center", padding: "5px 2px", borderRadius: 7, background: esHoy ? "linear-gradient(135deg,#6b9e9a,#2d6560)" : "transparent", cursor: dia ? "pointer" : "default", transition: "background 0.15s ease" }}
                       onMouseEnter={e => { if (!esHoy && dia) (e.currentTarget as HTMLDivElement).style.background = "#f0f9f7"; }}
                       onMouseLeave={e => { if (!esHoy && dia) (e.currentTarget as HTMLDivElement).style.background = "transparent"; }}>
                       <span style={{ fontSize: "0.78rem", fontWeight: esHoy ? 700 : 400, color: esHoy ? "white" : dia ? "#374151" : "#d1d5db" }}>
@@ -252,8 +234,6 @@ export default function Dashboard() {
                   );
                 })}
               </div>
-
-              {/* Eventos */}
               <div style={{ marginTop: 14, display: "flex", flexDirection: "column", gap: 8 }}>
                 {Object.entries(eventosCalendario).map(([dia, ev]) => (
                   <div key={dia} style={{ display: "flex", alignItems: "flex-start", gap: 10, padding: "10px 12px", borderRadius: 10, background: "#f7faf9", border: `1px solid ${ev.color}33` }}>
