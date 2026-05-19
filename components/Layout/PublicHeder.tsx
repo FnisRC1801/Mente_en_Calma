@@ -28,7 +28,7 @@ function PublicHeder() {
                         </p>
                         <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 12, marginTop: 25 }}>
                             <a href="/singup" className={styles.heroCta} style={{ marginTop: 0 }}>ÚNETE AHORA</a>
-                            <a href="/login-psico" className={styles.heroCtaPsico} style={{ marginTop: 0 }}>¿Deseas impartir como médico? Registrate ahora!!</a>
+
                         </div>
                     </div>
 
@@ -52,7 +52,7 @@ function PublicHeder() {
                                     </div>
                                     <div className={styles.stepBody}>
                                         <h3>Horarios Flexibles</h3>
-                                        <p>Agendas en horarios flexibles, para facilitar la experiencia del paciente</p>
+                                        <p>Agendas en horarios flexibles, paraw facilitar la experiencia del paciente</p>
                                     </div>
                                     <p className={styles.stepExtra}>Citas disponibles de lunes a domingo, de 7 AM a 10 PM. Modalidad presencial y en línea.</p>
                                 </div>

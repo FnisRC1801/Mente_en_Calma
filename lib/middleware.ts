@@ -4,19 +4,19 @@ export async function middleware(request: NextRequest) {
     const session = request.cookies.get("session");
     const { pathname } = request.nextUrl;
 
-    // Sin sesión → redirige al login si intenta entrar a dashboards
+    // ── Sin sesión ──────────────────────────────────────────────────
     if (!session) {
         if (
             pathname.startsWith("/dashboard") ||
-            pathname.startsWith("/dashboard_psico") ||
-            pathname.startsWith("/dashbooard_SU")
+            pathname.startsWith("/dashboard-psico") ||
+            pathname.startsWith("/admin")
         ) {
             return NextResponse.redirect(new URL("/login", request.url));
         }
         return NextResponse.next();
     }
 
-    // Con sesión → verificar rol via API interna
+    // ── Con sesión: verificar rol ───────────────────────────────────
     try {
         const verifyRes = await fetch(
             new URL("/api/auth/verify-role", request.url).toString(),
@@ -27,28 +27,39 @@ export async function middleware(request: NextRequest) {
         );
 
         if (!verifyRes.ok) {
-            return NextResponse.redirect(new URL("/login", request.url));
+            const res = NextResponse.redirect(new URL("/login", request.url));
+            res.cookies.delete("session");
+            return res;
         }
 
         const { role } = await verifyRes.json();
 
-        // Redirige al dashboard correcto si está en login
-        if (pathname === "/login" || pathname === "/singup") {
-            if (role === "superusuario") return NextResponse.redirect(new URL("/dashbooard_SU", request.url));
-            if (role === "psicologo") return NextResponse.redirect(new URL("/dashboard_psico", request.url));
+        // ── Ya tiene sesión e intenta ir a login/registro ───────────
+        if (
+            pathname === "/login" ||
+            pathname === "/login-psico" ||
+            pathname === "/singup" ||
+            pathname === "/singup-psico"
+        ) {
+            if (role === "superusuario")
+                return NextResponse.redirect(new URL("/admin", request.url));
+            if (role === "psicologo")
+                return NextResponse.redirect(new URL("/dashboard-psico", request.url));
             return NextResponse.redirect(new URL("/dashboard", request.url));
         }
 
-        // Protege rutas por rol
-        if (pathname.startsWith("/dashbooard_SU") && role !== "superusuario") {
+        // ── Protección por rol ──────────────────────────────────────
+        if (pathname.startsWith("/admin") && role !== "superusuario") {
             return NextResponse.redirect(new URL("/dashboard", request.url));
         }
-        if (pathname.startsWith("/dashboard_psico") && role !== "psicologo") {
+        if (pathname.startsWith("/dashboard-psico") && role !== "psicologo") {
             return NextResponse.redirect(new URL("/dashboard", request.url));
         }
 
     } catch {
-        return NextResponse.redirect(new URL("/login", request.url));
+        const res = NextResponse.redirect(new URL("/login", request.url));
+        res.cookies.delete("session");
+        return res;
     }
 
     return NextResponse.next();
@@ -57,9 +68,11 @@ export async function middleware(request: NextRequest) {
 export const config = {
     matcher: [
         "/dashboard/:path*",
-        "/dashboard_psico/:path*",
-        "/dashbooard_SU/:path*",
+        "/dashboard-psico/:path*",
+        "/admin/:path*",
         "/login",
+        "/login-psico",
         "/singup",
+        "/singup-psico",
     ],
 };
