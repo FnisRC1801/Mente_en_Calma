@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+
 import { useRouter } from "next/navigation";
 import { auth, db } from "@/lib/firebase-client";
 import { doc, getDoc, collection, query, where, getDocs } from "firebase/firestore";
@@ -39,6 +40,7 @@ interface Paciente {
     sexo: string;
     fechaNacimiento?: string;
     edad?: number;
+    fotoUrl?: string;
 }
 
 const ICONOS: Record<string, React.ReactNode> = {
@@ -48,6 +50,7 @@ const ICONOS: Record<string, React.ReactNode> = {
     "Terapia del Duelo": <LuSparkles size={20} />,
     "Psicología Infantil y Adolescente": <LuBaby size={20} />,
 };
+
 
 export default function DashboardPaciente() {
     const router = useRouter();
@@ -204,9 +207,14 @@ export default function DashboardPaciente() {
                     onMouseEnter={e => e.currentTarget.style.background = "#f9fafb"}
                     onMouseLeave={e => e.currentTarget.style.background = "transparent"}
                 >
-                    <div style={{ width: 36, height: 36, borderRadius: "50%", background: "linear-gradient(135deg, #6b9e9a, #2d6560)", display: "flex", alignItems: "center", justifyContent: "center", color: "white", fontWeight: 700, fontSize: "0.9rem", flexShrink: 0 }}>
-                        {paciente?.nombre?.[0]?.toUpperCase() ?? "P"}
-                    </div>
+                    {paciente?.fotoUrl ? (
+                        <img src={paciente.fotoUrl} alt="foto"
+                            style={{ width: 36, height: 36, borderRadius: "50%", objectFit: "cover", flexShrink: 0, border: "2px solid #e5e7eb" }} />
+                    ) : (
+                        <div style={{ width: 36, height: 36, borderRadius: "50%", background: "linear-gradient(135deg, #6b9e9a, #2d6560)", display: "flex", alignItems: "center", justifyContent: "center", color: "white", fontWeight: 700, fontSize: "0.9rem", flexShrink: 0 }}>
+                            {paciente?.nombre?.[0]?.toUpperCase() ?? "P"}
+                        </div>
+                    )}
                     <div style={{ flex: 1, minWidth: 0 }}>
                         <p style={{ margin: 0, fontSize: "0.82rem", fontWeight: 600, color: "#1a2e2c", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{paciente?.nombre}</p>
                         <p style={{ margin: 0, fontSize: "0.72rem", color: "#4a8a85", textTransform: "uppercase", letterSpacing: "0.05em" }}>Paciente</p>

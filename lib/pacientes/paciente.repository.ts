@@ -34,12 +34,13 @@ export async function getPacienteByUid(uid: string): Promise<Paciente | null> {
     if (!doc.exists) return null;
     const d = doc.data()!;
     return {
-        uid: doc.id,
-        nombre: String(d.nombre ?? ""),
-        email: String(d.email ?? ""),
-        sexo: (d.sexo ?? "M") as Sexo,
-        telefono: Number(d.telefono ?? 0),
-        createdAt: d.createdAt?.toDate?.().toISOString() ?? "",
-        updatedAt: d.updatedAt?.toDate?.().toISOString() ?? "",
-    };
+    uid: doc.id,
+    nombre: String(d.nombre ?? ""),
+    email: String(d.email ?? ""),
+    sexo: (d.sexo ?? "M") as Sexo,
+    telefono: Number(d.telefono ?? 0),
+    fotoUrl: d.fotoUrl ? String(d.fotoUrl) : undefined,   // 👈 agrega
+    createdAt: d.createdAt?.toDate?.().toISOString() ?? "",
+    updatedAt: d.updatedAt?.toDate?.().toISOString() ?? "",
+};
 }

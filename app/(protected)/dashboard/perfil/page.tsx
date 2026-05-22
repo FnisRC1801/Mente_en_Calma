@@ -6,11 +6,12 @@ import { auth, db } from "@/lib/firebase-client";
 import { doc, getDoc, updateDoc } from "firebase/firestore";
 import { signOut, updatePassword, updateEmail, reauthenticateWithCredential, EmailAuthProvider } from "firebase/auth";
 import {
-    LuUser, LuMail, LuPhone, LuCalendar, LuShield,
-    LuPencil, LuCheck, LuX, LuLock, LuTriangleAlert,
+    LuUser, LuMail, LuShield,
+    LuPencil, LuCheck, LuX, LuLock,
     LuArrowLeft, LuCamera, LuLogOut
 } from "react-icons/lu";
 import { FaGoogle } from "react-icons/fa";
+import ModalFotoPerfil from "@/components/ModalFotoPerfil";
 
 interface Paciente {
     nombre: string;
@@ -20,7 +21,6 @@ interface Paciente {
     fechaNacimiento?: string;
     edad?: number;
     fotoUrl?: string;
-    telefonoVerificado?: boolean;
 }
 
 export default function PerfilPaciente() {
@@ -29,19 +29,16 @@ export default function PerfilPaciente() {
     const [loading, setLoading] = useState(true);
     const [esGoogle, setEsGoogle] = useState(false);
 
-    // Estados de edición
     const [editandoNombre, setEditandoNombre] = useState(false);
     const [nuevoNombre, setNuevoNombre] = useState("");
     const [editandoTelefono, setEditandoTelefono] = useState(false);
     const [nuevoTelefono, setNuevoTelefono] = useState("");
 
-    // Estados cambio contraseña
     const [showCambiarPassword, setShowCambiarPassword] = useState(false);
     const [passwordActual, setPasswordActual] = useState("");
     const [passwordNueva, setPasswordNueva] = useState("");
     const [passwordConfirm, setPasswordConfirm] = useState("");
 
-    // Estados cambio email
     const [showCambiarEmail, setShowCambiarEmail] = useState(false);
     const [nuevoEmail, setNuevoEmail] = useState("");
     const [passwordParaEmail, setPasswordParaEmail] = useState("");
@@ -49,6 +46,8 @@ export default function PerfilPaciente() {
     const [error, setError] = useState("");
     const [exito, setExito] = useState("");
     const [guardando, setGuardando] = useState(false);
+    const [subiendoFoto, setSubiendoFoto] = useState(false);
+    const [showModalFoto, setShowModalFoto] = useState(false);
 
     useEffect(() => {
         async function cargar() {
@@ -86,6 +85,29 @@ export default function PerfilPaciente() {
             setTimeout(() => setExito(""), 3000);
         } catch { setError("Error al actualizar teléfono."); }
         finally { setGuardando(false); }
+    }
+
+    async function handleSubirFoto(e: React.ChangeEvent<HTMLInputElement>) {
+        const file = e.target.files?.[0];
+        if (!file) return;
+        if (!file.type.startsWith("image/")) { setError("Solo se permiten imágenes."); return; }
+        if (file.size > 5 * 1024 * 1024) { setError("La imagen no puede superar 5 MB."); return; }
+        setSubiendoFoto(true); setError("");
+        try {
+            const formData = new FormData();
+            formData.append("file", file);
+            formData.append("tipo", "perfil");
+            const res = await fetch("/api/upload", { method: "POST", body: formData });
+            const data = await res.json();
+            if (!data.ok) throw new Error(data.message);
+            await updateDoc(doc(db, "pacientes", auth.currentUser!.uid), { fotoUrl: data.data.url });
+            setPaciente(prev => prev ? { ...prev, fotoUrl: data.data.url } : null);
+            setShowModalFoto(false);
+            setExito("Foto actualizada correctamente.");
+            setTimeout(() => setExito(""), 3000);
+        } catch (e: any) {
+            setError(e.message ?? "Error al subir la foto.");
+        } finally { setSubiendoFoto(false); }
     }
 
     async function handleCambiarPassword() {
@@ -144,6 +166,24 @@ export default function PerfilPaciente() {
 
     return (
         <div style={{ minHeight: "100vh", background: "#f8fafb", fontFamily: "'Montserrat', sans-serif" }}>
+            <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
+
+            {/* Modal foto */}
+            {showModalFoto && (
+                <ModalFotoPerfil
+                    nombreUsuario={paciente?.nombre ?? "P"}
+                    subiendoFoto={subiendoFoto}
+                    onSubirFoto={handleSubirFoto}
+                    onSeleccionar={async (url) => {
+                        await updateDoc(doc(db, "pacientes", auth.currentUser!.uid), { fotoUrl: url });
+                        setPaciente(prev => prev ? { ...prev, fotoUrl: url } : null);
+                        setShowModalFoto(false);
+                        setExito("Foto actualizada correctamente.");
+                        setTimeout(() => setExito(""), 3000);
+                    }}
+                    onCerrar={() => setShowModalFoto(false)}
+                />
+            )}
 
             {/* Header */}
             <div style={{ background: "white", borderBottom: "1px solid #e5e7eb", padding: "16px 32px", display: "flex", justifyContent: "space-between", alignItems: "center", position: "sticky", top: 0, zIndex: 10 }}>
@@ -162,19 +202,24 @@ export default function PerfilPaciente() {
 
             <div style={{ maxWidth: 680, margin: "0 auto", padding: "32px 20px", display: "flex", flexDirection: "column", gap: 20 }}>
 
-                {/* Mensajes */}
                 {exito && <div style={{ background: "#f0f9f7", border: "1px solid #b2ddd7", borderRadius: 10, padding: "10px 16px", color: "#2a5f5a", fontSize: "0.88rem" }}>✅ {exito}</div>}
                 {error && <div style={{ background: "#fef2f2", border: "1px solid #fecaca", borderRadius: 10, padding: "10px 16px", color: "#dc2626", fontSize: "0.88rem" }}>{error}</div>}
 
                 {/* Card foto + nombre */}
                 <div style={{ background: "white", borderRadius: 16, padding: "28px 24px", border: "1px solid #e5e7eb", display: "flex", flexDirection: "column", alignItems: "center", gap: 16 }}>
                     <div style={{ position: "relative" }}>
-                        <div style={{ width: 88, height: 88, borderRadius: "50%", background: "linear-gradient(135deg, #6b9e9a, #2d6560)", display: "flex", alignItems: "center", justifyContent: "center", color: "white", fontWeight: 700, fontSize: "2rem" }}>
-                            {paciente?.nombre?.[0]?.toUpperCase() ?? "P"}
-                        </div>
-                        <button style={{ position: "absolute", bottom: 0, right: 0, width: 28, height: 28, borderRadius: "50%", background: "#4a8a85", border: "2px solid white", display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer" }}>
+                        {paciente?.fotoUrl ? (
+                            <img src={paciente.fotoUrl} alt="Foto de perfil"
+                                style={{ width: 88, height: 88, borderRadius: "50%", objectFit: "cover", border: "3px solid #e5e7eb" }} />
+                        ) : (
+                            <div style={{ width: 88, height: 88, borderRadius: "50%", background: "linear-gradient(135deg, #6b9e9a, #2d6560)", display: "flex", alignItems: "center", justifyContent: "center", color: "white", fontWeight: 700, fontSize: "2rem" }}>
+                                {paciente?.nombre?.[0]?.toUpperCase() ?? "P"}
+                            </div>
+                        )}
+                        <label onClick={() => setShowModalFoto(true)}
+                            style={{ position: "absolute", bottom: 0, right: 0, width: 28, height: 28, borderRadius: "50%", background: "#4a8a85", border: "2px solid white", display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer" }}>
                             <LuCamera size={14} color="white" />
-                        </button>
+                        </label>
                     </div>
                     <div style={{ textAlign: "center" }}>
                         <p style={{ margin: 0, fontFamily: "'Poppins', sans-serif", fontWeight: 700, fontSize: "1.2rem", color: "#1a2e2c" }}>{paciente?.nombre}</p>
@@ -265,29 +310,12 @@ export default function PerfilPaciente() {
                     </div>
                 </div>
 
-                {/* Alerta teléfono no verificado */}
-                {!paciente?.telefonoVerificado && (
-                    <div style={{ background: "#fffbeb", border: "1px solid #fde68a", borderRadius: 16, padding: "16px 20px", display: "flex", justifyContent: "space-between", alignItems: "center", gap: 12 }}>
-                        <div style={{ display: "flex", gap: 12, alignItems: "center" }}>
-                            <LuTriangleAlert  size={20} color="#b45309" />
-                            <div>
-                                <p style={{ margin: 0, fontWeight: 600, fontSize: "0.9rem", color: "#b45309" }}>¡Validación pendiente!</p>
-                                <p style={{ margin: "2px 0 0", fontSize: "0.78rem", color: "#92400e" }}>Tu número de teléfono no ha sido verificado.</p>
-                            </div>
-                        </div>
-                        <button style={{ padding: "8px 16px", borderRadius: 10, border: "none", background: "#f59e0b", color: "white", fontSize: "0.82rem", fontWeight: 600, cursor: "pointer", whiteSpace: "nowrap" }}>
-                            Validar
-                        </button>
-                    </div>
-                )}
-
                 {/* Seguridad */}
                 <div style={{ background: "white", borderRadius: 16, padding: "24px", border: "1px solid #e5e7eb" }}>
                     <h2 style={{ fontFamily: "'Poppins', sans-serif", fontWeight: 600, fontSize: "1rem", color: "#1a2e2c", margin: "0 0 16px", display: "flex", alignItems: "center", gap: 8 }}>
                         <LuShield size={18} color="#4a8a85" /> Seguridad y Cuenta
                     </h2>
 
-                    {/* Proveedor */}
                     <div style={{ padding: "12px 14px", background: "#f9fafb", borderRadius: 10, marginBottom: 12, display: "flex", alignItems: "center", gap: 10 }}>
                         {esGoogle ? <FaGoogle size={16} color="#4285F4" /> : <LuMail size={16} color="#6b7280" />}
                         <div>
@@ -296,7 +324,6 @@ export default function PerfilPaciente() {
                         </div>
                     </div>
 
-                    {/* Cambiar email — solo si no es Google */}
                     {!esGoogle && (
                         <div style={{ marginBottom: 12 }}>
                             <button onClick={() => setShowCambiarEmail(!showCambiarEmail)}
@@ -320,7 +347,6 @@ export default function PerfilPaciente() {
                         </div>
                     )}
 
-                    {/* Cambiar contraseña — solo si no es Google */}
                     {!esGoogle && (
                         <div>
                             <button onClick={() => setShowCambiarPassword(!showCambiarPassword)}
