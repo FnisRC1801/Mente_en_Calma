@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { auth, db } from "@/lib/firebase-client";
 import { doc, getDoc, collection, getDocs, query, where, addDoc, Timestamp } from "firebase/firestore";
-import { LuBrain, LuHeartPulse, LuHeart, LuSparkles, LuBaby, LuUser, LuUsers} from "react-icons/lu";
+import { LuBrain, LuHeartPulse, LuHeart, LuSparkles, LuBaby, LuUser, LuUsers } from "react-icons/lu";
 
 interface Especialidad {
     id: string;
@@ -27,6 +27,8 @@ interface Paciente {
     email: string;
     telefono: number;
     sexo: string;
+    fechaNacimiento?: string;
+    edad?: number;
 }
 
 const ESPECIALIDADES_SOLO_ADULTOS = ["Terapia de Parejas"];
@@ -56,6 +58,7 @@ export default function NuevaCita() {
     const [esTutor, setEsTutor] = useState(false);
     const [nombreMenor, setNombreMenor] = useState("");
     const [edadMenor, setEdadMenor] = useState("");
+    const [edadPaciente, setEdadPaciente] = useState<number>(0);
     const [fechaNacimiento, setFechaNacimiento] = useState("");
     const [edad, setEdad] = useState<number | "">("");
 
@@ -81,7 +84,23 @@ export default function NuevaCita() {
             if (!user) { router.push("/login"); return; }
 
             const snap = await getDoc(doc(db, "pacientes", user.uid));
-            if (snap.exists()) setPaciente(snap.data() as Paciente);
+            if (snap.exists()) {
+                const data = snap.data() as Paciente;
+                setPaciente(data);
+                if (data.fechaNacimiento) {
+                    const hoy = new Date();
+                    const nac = new Date(data.fechaNacimiento);
+                    let edadCalc = hoy.getFullYear() - nac.getFullYear();
+                    const m = hoy.getMonth() - nac.getMonth();
+                    if (m < 0 || (m === 0 && hoy.getDate() < nac.getDate())) edadCalc--;
+                    setEdadPaciente(edadCalc);
+                    setFechaNacimiento(data.fechaNacimiento);
+                    setEdad(edadCalc);
+                } else if (data.edad) {
+                    setEdadPaciente(data.edad);
+                    setEdad(data.edad);
+                }
+            }
 
             const espSnap = await getDocs(collection(db, "especialidades"));
             setEspecialidades(espSnap.docs.map(d => ({ id: d.id, ...d.data() } as Especialidad)));
@@ -281,13 +300,13 @@ export default function NuevaCita() {
                                     <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
                                         <div>
                                             <label style={{ ...labelStyle, color: "#4b5563" }}>Fecha de nacimiento</label>
-                                            <input type="date" style={{ ...inputStyle, background: "white", color: "#111827", border: "1px solid #d1d5db" }}
-                                                value={fechaNacimiento} onChange={e => { setFechaNacimiento(e.target.value); setEdad(calcularEdad(e.target.value)); }} />
+                                            <input type="date" style={{ ...inputStyle, background: "#f9fafb", color: "#111827", border: "1px solid #d1d5db" }}
+                                                value={fechaNacimiento} readOnly />
                                         </div>
                                         <div>
                                             <label style={{ ...labelStyle, color: "#4b5563" }}>Edad</label>
                                             <input type="number" style={{ ...inputStyle, background: "#f9fafb", color: "#111827", border: "1px solid #d1d5db" }}
-                                                value={edad} readOnly placeholder="Se calcula automáticamente" />
+                                                value={edadPaciente} readOnly />
                                         </div>
                                     </div>
                                 )}

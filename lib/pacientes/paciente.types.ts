@@ -6,6 +6,7 @@ export interface Paciente {
     email: string;
     sexo: Sexo;
     telefono?: number;  // ← number
+    edad: number;
     createdAt: string;
     updatedAt: string;
 }

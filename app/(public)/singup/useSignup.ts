@@ -30,8 +30,14 @@ export function useSignup() {
     // Campos comunes
     const [name, setName] = useState("");
     const [email, setEmail] = useState("");
-    const [sexo, setSexo] = useState<"M" | "F" | "Otro" | "">("");
+    const [sexo, setSexo] = useState<"M" | "F" | "N/A" | "">("");
+
+    // Estados nuevos para separar la fecha de nacimiento
+    const [diaNac, setDiaNac] = useState("");
+    const [mesNac, setMesNac] = useState("");
+    const [anioNac, setAnioNac] = useState("");
     const [fechaNacimiento, setFechaNacimiento] = useState("");
+
     const [password, setPassword] = useState("");
     const [confirm, setConfirm] = useState("");
     const [pwdError, setPwdError] = useState("");
@@ -53,6 +59,7 @@ export function useSignup() {
     const [cedulaFile, setCedulaFile] = useState<File | null>(null);
     const [cedulaFileName, setCedulaFileName] = useState("");
     const [especialidades, setEspecialidades] = useState<string[]>([]);
+    const [cargandoEspecialidades, setCargandoEspecialidades] = useState(true);
 
     const [error, setError] = useState("");
     const [loading, setLoading] = useState(false);
@@ -62,18 +69,38 @@ export function useSignup() {
 
     const strength = getStrength(password);
 
-    const fechaMaximaPermitida = new Date(
-        new Date().setFullYear(new Date().getFullYear() - 18)
-    ).toISOString().split("T")[0];
+    // Efecto para concatenar la fecha automáticamente en formato YYYY-MM-DD
+    useEffect(() => {
+        if (diaNac && mesNac && anioNac) {
+            const diasEnMes = new Date(Number(anioNac), Number(mesNac), 0).getDate();
+            const diaFinal = Math.min(Number(diaNac), diasEnMes);
+            if (Number(diaNac) > diasEnMes) setDiaNac(String(diaFinal).padStart(2, "0"));
+            setFechaNacimiento(`${anioNac}-${mesNac}-${String(diaFinal).padStart(2, "0")}`);
+        } else {
+            setFechaNacimiento("");
+        }
+    }, [diaNac, mesNac, anioNac]);
 
     useEffect(() => {
         async function cargarEspecialidades() {
             try {
+                // Intentar cargar del caché primero
+                const cached = localStorage.getItem("especialidades");
+                if (cached) {
+                    setEspecialidades(JSON.parse(cached));
+                    setCargandoEspecialidades(false);
+                    return;
+                }
+                // Si no hay caché, consultar Firestore
                 const snap = await getDocs(collection(db, "especialidades"));
                 const lista = snap.docs.map(d => (d.data() as any).nombre as string);
-                setEspecialidades(lista.sort());
+                const listaOrdenada = lista.sort();
+                setEspecialidades(listaOrdenada);
+                localStorage.setItem("especialidades", JSON.stringify(listaOrdenada));
             } catch {
                 setEspecialidades([]);
+            } finally {
+                setCargandoEspecialidades(false);
             }
         }
         cargarEspecialidades();
@@ -146,7 +173,7 @@ export function useSignup() {
         if (!sexo) { setError("Selecciona tu sexo."); return; }
 
         if (tipo === "paciente") {
-            if (!fechaNacimiento) { setError("Ingresa tu fecha de nacimiento."); return; }
+            if (!diaNac || !mesNac || !anioNac) { setError("Selecciona tu fecha de nacimiento completa."); return; }
             const edadPaciente = calcularEdad(fechaNacimiento);
             if (edadPaciente < 18) { setError("Debes ser mayor de 18 años para registrarte."); return; }
         }
@@ -248,17 +275,15 @@ export function useSignup() {
         } finally { setLoading(false); }
     }
 
-    // Al final de tu archivo app/(public)/singup/useSignup.ts
     return {
         tipo, setTipo, name, setName, email, setEmail, sexo, setSexo,
-        fechaNacimiento, setFechaNacimiento, password, setPassword, confirm, setConfirm,
+        diaNac, setDiaNac, mesNac, setMesNac, anioNac, setAnioNac, fechaNacimiento,
+        password, setPassword, confirm, setConfirm,
         pwdError, aceptaTerminos, setAceptaTerminos, showTerminos, setShowTerminos,
         showPassword, setShowPassword, showConfirm, setShowConfirm, telefono, setTelefono,
         especialidad, setEspecialidad, otraDescripcion, setOtraDescripcion, otraEspecialidad, setOtraEspecialidad,
-        mostrarDescripcion,
-        setMostrarDescripcion, // 👈 ¡ASEGÚRATE DE PONER ESTA LÍNEA AQUÍ!
-        gradoEstudios, setGradoEstudios, consultorio, setConsultorio,
-        cedulaFileName, especialidades, error, setError, loading, enviado, modoGoogle, strength,
-        fechaMaximaPermitida, handlePasswordChange, handleGoogle, handleCedulaFile, handleRegister, calcularEdad
+        mostrarDescripcion, setMostrarDescripcion, gradoEstudios, setGradoEstudios, consultorio, setConsultorio,
+        cedulaFileName, especialidades, cargandoEspecialidades, error, setError, loading, enviado, modoGoogle, strength,
+        handlePasswordChange, handleGoogle, handleCedulaFile, handleRegister, calcularEdad
     };
 }

@@ -37,6 +37,8 @@ interface Paciente {
     nombre: string;
     email: string;
     sexo: string;
+    fechaNacimiento?: string;
+    edad?: number;
 }
 
 const ICONOS: Record<string, React.ReactNode> = {
@@ -99,6 +101,7 @@ export default function DashboardPaciente() {
             <p style={{ fontFamily: "'Poppins', sans-serif", color: "#4a8a85" }}>Cargando...</p>
         </div>
     );
+    
 
     return (
         <div style={{ minHeight: "100vh", background: "#f8fafb", display: "flex", fontFamily: "'Montserrat', sans-serif", position: "relative", overflowX: "hidden" }}>
