@@ -39,7 +39,6 @@ interface Paciente {
     sexo: string;
 }
 
-// 1. Mapeo de iconos vectoriales tipado correctamente para React
 const ICONOS: Record<string, React.ReactNode> = {
     "Neuropsicología": <LuBrain size={20} />,
     "Psicología Clínica": <LuHeartPulse size={20} />,
@@ -55,7 +54,6 @@ export default function DashboardPaciente() {
     const [loading, setLoading] = useState(true);
     const [mesActual] = useState(new Date());
 
-    // Estado para controlar la apertura de la barra lateral en móviles
     const [menuAbierto, setMenuAbierto] = useState(false);
 
     useEffect(() => {
@@ -105,7 +103,6 @@ export default function DashboardPaciente() {
     return (
         <div style={{ minHeight: "100vh", background: "#f8fafb", display: "flex", fontFamily: "'Montserrat', sans-serif", position: "relative", overflowX: "hidden" }}>
 
-            {/* Variables CSS y consultas de medios para transiciones animadas */}
             <style>{`
                 aside {
                     transition: transform 0.3s ease-in-out;
@@ -146,7 +143,6 @@ export default function DashboardPaciente() {
                 }
             `}</style>
 
-            {/* Fondo oscuro traslúcido para cerrar el menú al hacer clic fuera (solo móviles) */}
             {menuAbierto && (
                 <div
                     onClick={() => setMenuAbierto(false)}
@@ -166,7 +162,7 @@ export default function DashboardPaciente() {
 
                 <nav style={{ flex: 1, padding: "16px 12px", display: "flex", flexDirection: "column", gap: 4 }}>
                     {[
-                        { icon: <LuLayoutDashboard size={18} />, label: "Inicio", active: true },
+                        { icon: <LuLayoutDashboard size={18} />, label: "Dashboard", active: true },
                         { icon: <LuCalendarDays size={18} />, label: "Mis Citas" },
                         { icon: <LuMessageSquare size={18} />, label: "Mensajes" },
                         { icon: <LuClipboardList size={18} />, label: "Historial Médico" },
@@ -286,14 +282,13 @@ export default function DashboardPaciente() {
                                         <LuCalendar size={40} />
                                     </div>
                                     <p style={{ margin: 0, fontSize: "0.88rem", fontWeight: 500 }}>No tienes citas próximas</p>
-                                    <p style={{ margin: "4px 0 0", fontSize: "0.78rem" }}>Agenda una cita con un especialista</p>
+                                    <p style={{ margin: "4px 0 0", fontSize: "0.78rem" }}>Agenda una cita con un specialist</p>
                                 </div>
                             ) : (
                                 <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
                                     {citasProximas.map(cita => (
                                         <div key={cita.id} className="cita-item" style={{ border: "1px solid #e5e7eb", borderRadius: 12, padding: "14px 16px", display: "flex", justifyContent: "space-between", alignItems: "center", gap: 12 }}>
                                             <div style={{ display: "flex", gap: 12, alignItems: "center" }}>
-                                                {/* Se corrigió la lectura del mapa de componentes vectoriales */}
                                                 <div style={{ width: 40, height: 40, borderRadius: "50%", background: "#f0f9f7", display: "flex", alignItems: "center", justifyContent: "center", color: "#2a5f5a", flexShrink: 0 }}>
                                                     {ICONOS[cita.especialidad] ?? <LuBrain size={20} />}
                                                 </div>
@@ -325,8 +320,8 @@ export default function DashboardPaciente() {
 
                         {/* Calendario */}
                         <div style={{ background: "white", borderRadius: 16, padding: "20px 24px", border: "1px solid #e5e7eb", minWidth: 0 }}>
-                            <h3 style={{ fontFamily: "'Poppins', sans-serif", fontWeight: 600, fontSize: "1rem", color: "#1a2e2c", margin: "0 0 16px" }}>
-                                📅 {meses[mesActual.getMonth()]} {mesActual.getFullYear()}
+                            <h3 style={{ fontFamily: "'Poppins', sans-serif", fontWeight: 600, fontSize: "1rem", color: "#1a2e2c", margin: "0 0 16px", display: "flex", alignItems: "center", gap: 8 }}>
+                                <LuCalendarDays size={18} style={{ color: "#4a8a85" }} /> {meses[mesActual.getMonth()]} {mesActual.getFullYear()}
                             </h3>
                             <div style={{ display: "grid", gridTemplateColumns: "repeat(7, 1fr)", gap: 4, marginBottom: 8 }}>
                                 {["LUN", "MAR", "MIÉ", "JUE", "VIE", "SÁB", "DOM"].map(d => (
