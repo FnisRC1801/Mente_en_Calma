@@ -5,16 +5,16 @@ import { useRouter } from "next/navigation";
 import { auth, db } from "@/lib/firebase-client";
 import { doc, getDoc, collection, query, where, getDocs } from "firebase/firestore";
 import { signOut } from "firebase/auth";
-import { 
-    LuLayoutDashboard, 
-    LuCalendarDays, 
-    LuMessageSquare, 
-    LuClipboardList, 
-    LuSettings, 
-    LuCalendarCheck, 
-    LuCalendar, 
-    LuClock, 
-    LuMapPin, 
+import {
+    LuLayoutDashboard,
+    LuCalendarDays,
+    LuMessageSquare,
+    LuClipboardList,
+    LuSettings,
+    LuCalendarCheck,
+    LuCalendar,
+    LuClock,
+    LuMapPin,
     LuBrain,
     LuHeartPulse,
     LuHeart,
@@ -101,7 +101,7 @@ export default function DashboardPaciente() {
             <p style={{ fontFamily: "'Poppins', sans-serif", color: "#4a8a85" }}>Cargando...</p>
         </div>
     );
-    
+
 
     return (
         <div style={{ minHeight: "100vh", background: "#f8fafb", display: "flex", fontFamily: "'Montserrat', sans-serif", position: "relative", overflowX: "hidden" }}>
@@ -198,7 +198,12 @@ export default function DashboardPaciente() {
                 </nav>
 
                 {/* Usuario */}
-                <div style={{ padding: "16px 20px", borderTop: "1px solid #e5e7eb", display: "flex", alignItems: "center", gap: 10 }}>
+                <div
+                    onClick={() => router.push("/dashboard/perfil")}
+                    style={{ padding: "16px 20px", borderTop: "1px solid #e5e7eb", display: "flex", alignItems: "center", gap: 10, cursor: "pointer", transition: "background 0.2s ease" }}
+                    onMouseEnter={e => e.currentTarget.style.background = "#f9fafb"}
+                    onMouseLeave={e => e.currentTarget.style.background = "transparent"}
+                >
                     <div style={{ width: 36, height: 36, borderRadius: "50%", background: "linear-gradient(135deg, #6b9e9a, #2d6560)", display: "flex", alignItems: "center", justifyContent: "center", color: "white", fontWeight: 700, fontSize: "0.9rem", flexShrink: 0 }}>
                         {paciente?.nombre?.[0]?.toUpperCase() ?? "P"}
                     </div>
@@ -300,13 +305,13 @@ export default function DashboardPaciente() {
                                                     <p style={{ margin: 0, fontSize: "0.78rem", color: "#6b7280" }}>{cita.especialidad}</p>
 
                                                     <div style={{ display: "flex", gap: 12, marginTop: 6, flexWrap: "wrap", alignItems: "center" }}>
-                                                        <span style={{ fontSize: "0.75rem", color: "#9ca3af", whiteSpace: "nowrap" , display: "flex", alignItems: "center", gap: 4 }}>
+                                                        <span style={{ fontSize: "0.75rem", color: "#9ca3af", whiteSpace: "nowrap", display: "flex", alignItems: "center", gap: 4 }}>
                                                             <LuCalendar size={14} /> {cita.fecha}
                                                         </span>
-                                                        <span style={{ fontSize: "0.75rem", color: "#9ca3af", whiteSpace: "nowrap" , display: "flex", alignItems: "center", gap: 4 }}>
+                                                        <span style={{ fontSize: "0.75rem", color: "#9ca3af", whiteSpace: "nowrap", display: "flex", alignItems: "center", gap: 4 }}>
                                                             <LuClock size={14} /> {cita.hora}
                                                         </span>
-                                                        <span style={{ fontSize: "0.75rem", color: "#9ca3af" , display: "flex", alignItems: "center", gap: 4 }}>
+                                                        <span style={{ fontSize: "0.75rem", color: "#9ca3af", display: "flex", alignItems: "center", gap: 4 }}>
                                                             <LuMapPin size={14} /> {cita.lugar}
                                                         </span>
                                                     </div>
