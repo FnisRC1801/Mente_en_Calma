@@ -3,9 +3,10 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
-import { signInWithEmailAndPassword, signInWithPopup, GoogleAuthProvider, sendPasswordResetEmail } from "firebase/auth";
+import { signInWithEmailAndPassword, signInWithPopup, GoogleAuthProvider } from "firebase/auth";
 import { auth } from "@/lib/firebase-client";
 import { LuEye, LuEyeOff } from "react-icons/lu";
+import RecuperarPassword from "./recuperar-password"; // Importamos tu nuevo archivo secundario
 
 export default function Login() {
     const router = useRouter();
@@ -13,9 +14,7 @@ export default function Login() {
     const [password, setPassword] = useState("");
     const [error, setError] = useState("");
     const [loading, setLoading] = useState(false);
-    const [resetEmail, setResetEmail] = useState("");
-    const [resetEnviado, setResetEnviado] = useState(false);
-    const [showReset, setShowReset] = useState(false);
+    const [showReset, setShowReset] = useState(false); // Tu estado para conmutar las vistas
 
     // Estado para controlar la visibilidad de la contraseña
     const [showPassword, setShowPassword] = useState(false);
@@ -85,29 +84,13 @@ export default function Login() {
             else router.push("/dashboard");
 
         } catch (error: any) {
-
             if (error.code !== "auth/popup-closed-by-user") {
                 setError("Error al iniciar con Google.");
             }
-
         } finally {
             setLoading(false);
         }
     }
-
-    async function handleOlvidePassword() {
-    setShowReset(true);
-}
-
-async function handleEnviarReset() {
-    if (!resetEmail.trim()) { setError("Ingresa tu correo."); return; }
-    try {
-        await sendPasswordResetEmail(auth, resetEmail.trim());
-        setResetEnviado(true);
-    } catch {
-        setError("No encontramos una cuenta con ese correo.");
-    }
-}
 
     return (
         <div className="relative min-h-screen" style={{ background: "linear-gradient(to bottom, #5f817d, #0f1e33)" }}>
@@ -122,6 +105,8 @@ async function handleEnviarReset() {
 
             <div className="flex items-center justify-center min-h-screen px-4 pt-24 pb-8">
                 <div className="anim-card-wrapper w-full max-w-4xl rounded-3xl shadow-2xl overflow-hidden flex min-h-[540px]">
+
+                    {/* Sección izquierda (Imagen decorativa) */}
                     <div className="hidden md:flex md:w-2/5 relative flex-col justify-end p-8"
                         style={{ backgroundImage: "url('https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=800&q=80')", backgroundSize: "cover", backgroundPosition: "center" }}>
                         <div style={{ position: "absolute", inset: 0, background: "linear-gradient(to bottom, rgba(74,138,133,0.35) 0%, rgba(15,42,40,0.88) 100%)" }} />
@@ -133,92 +118,107 @@ async function handleEnviarReset() {
                         </div>
                     </div>
 
+                    {/* Sección derecha (Contenedor Dinámico) */}
                     <div className="anim-card flex-1 flex flex-col justify-center px-8 py-10" style={{ background: "white" }}>
-                        <h1 className="anim-title" style={{ fontFamily: "'Poppins', sans-serif", fontWeight: 700, fontSize: "1.7rem", color: "#1a2e1a", margin: 0 }}>Bienvenido</h1>
-                        <p className="anim-title" style={{ marginTop: 4, fontSize: "0.9rem", color: "#6b7280", marginBottom: 24 }}>Ingresa a tu cuenta para gestionar tus citas.</p>
 
-                        <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
-                            <div className="anim-field">
-                                <label style={{ display: "block", fontSize: "0.75rem", fontWeight: 600, color: "#4b5563", marginBottom: 6, textTransform: "uppercase", letterSpacing: "0.07em" }}>Correo electrónico</label>
-                                <div className="input-wrap" style={{ display: "flex", alignItems: "center", gap: 8, border: "1px solid #d1d5db", borderRadius: 12, padding: "10px 14px", background: "white" }}>
-                                    <svg viewBox="0 0 24 24" style={{ width: 16, height: 16, color: "#9ca3af", flexShrink: 0 }} fill="none" stroke="currentColor" strokeWidth="2">
-                                        <rect x="2" y="4" width="20" height="16" rx="2" /><path d="m2 7 10 7 10-7" />
-                                    </svg>
-                                    <input type="email" placeholder="ejemplo@correo.com" value={email} onChange={e => setEmail(e.target.value)}
-                                        style={{ flex: 1, background: "transparent", border: "none", outline: "none", fontSize: "0.9rem", color: "#111827" }} />
+                        {!showReset ? (
+                            // ================= VISTA A: INICIO DE SESIÓN =================
+                            <>
+                                <h1 className="anim-title" style={{ fontFamily: "'Poppins', sans-serif", fontWeight: 700, fontSize: "1.7rem", color: "#1a2e1a", margin: 0 }}>Bienvenido</h1>
+                                <p className="anim-title" style={{ marginTop: 4, fontSize: "0.9rem", color: "#6b7280", marginBottom: 24 }}>Ingresa a tu cuenta para gestionar tus citas.</p>
+
+                                <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+                                    <div className="anim-field">
+                                        <label style={{ display: "block", fontSize: "0.75rem", fontWeight: 600, color: "#4b5563", marginBottom: 6, textTransform: "uppercase", letterSpacing: "0.07em" }}>Correo electrónico</label>
+                                        <div className="input-wrap" style={{ display: "flex", alignItems: "center", gap: 8, border: "1px solid #d1d5db", borderRadius: 12, padding: "10px 14px", background: "white" }}>
+                                            <svg viewBox="0 0 24 24" style={{ width: 16, height: 16, color: "#9ca3af", flexShrink: 0 }} fill="none" stroke="currentColor" strokeWidth="2">
+                                                <rect x="2" y="4" width="20" height="16" rx="2" /><path d="m2 7 10 7 10-7" />
+                                            </svg>
+                                            <input type="email" placeholder="ejemplo@correo.com" value={email} onChange={e => setEmail(e.target.value)}
+                                                style={{ flex: 1, background: "transparent", border: "none", outline: "none", fontSize: "0.9rem", color: "#111827" }} />
+                                        </div>
+                                    </div>
+
+                                    <div className="anim-field">
+                                        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 6 }}>
+                                            <label style={{ fontSize: "0.75rem", fontWeight: 600, color: "#4b5563", textTransform: "uppercase", letterSpacing: "0.07em" }}>Contraseña</label>
+                                            <button type="button" className="nav-link"
+                                                onClick={() => { setError(""); setShowReset(true); }} // Limpia errores viejos y monta el reset
+                                                style={{ fontSize: "0.78rem", color: "#63a19a", background: "none", border: "none", cursor: "pointer", fontWeight: 500 }}>
+                                                ¿Olvidaste tu contraseña?
+                                            </button>
+                                        </div>
+                                        <div className="input-wrap" style={{ display: "flex", alignItems: "center", gap: 8, border: "1px solid #d1d5db", borderRadius: 12, padding: "10px 14px", background: "white" }}>
+                                            <svg viewBox="0 0 24 24" style={{ width: 16, height: 16, color: "#9ca3af", flexShrink: 0 }} fill="none" stroke="currentColor" strokeWidth="2">
+                                                <rect x="3" y="11" width="18" height="11" rx="2" /><path d="M7 11V7a5 5 0 0 1 10 0v4" />
+                                            </svg>
+                                            <input type={showPassword ? "text" : "password"} placeholder="••••••••" value={password} onChange={e => setPassword(e.target.value)}
+                                                style={{ flex: 1, background: "transparent", border: "none", outline: "none", fontSize: "0.9rem", color: "#111827" }} />
+                                            <button type="button" onClick={() => setShowPassword(!showPassword)} style={{ background: "none", border: "none", cursor: "pointer", color: "#9ca3af", display: "flex", alignItems: "center", padding: 0 }}>
+                                                {showPassword ? <LuEyeOff size={16} /> : <LuEye size={16} />}
+                                            </button>
+                                        </div>
+                                    </div>
+
+                                    <div className="anim-field">
+                                        <label style={{ display: "inline-flex", alignItems: "center", gap: 8, fontSize: "0.85rem", color: "#6b7280", cursor: "pointer" }}>
+                                            <input type="checkbox" style={{ accentColor: "#4a8a85" }} />
+                                            Recordar sesión
+                                        </label>
+                                    </div>
+
+                                    {error && (
+                                        <div className="anim-field" style={{ background: "#fef2f2", border: "1px solid #fecaca", borderRadius: 10, padding: "8px 12px" }}>
+                                            <p style={{ margin: 0, fontSize: "0.82rem", color: "#dc2626" }}>{error}</p>
+                                        </div>
+                                    )}
+
+                                    <div className="anim-btn">
+                                        <button type="button" onClick={handleLogin} disabled={loading} className="btn-primary"
+                                            style={{ width: "100%", background: loading ? "#9ca3af" : "linear-gradient(135deg, #6b9e9a, #2d6560)", border: "none", borderRadius: 12, padding: "12px", color: "white", fontFamily: "'Poppins', sans-serif", fontWeight: 600, fontSize: "0.95rem", cursor: loading ? "not-allowed" : "pointer", display: "flex", alignItems: "center", justifyContent: "center", gap: 8 }}>
+                                            {loading ? "Entrando..." : "Iniciar Sesión"}
+                                            {!loading && <svg viewBox="0 0 24 24" style={{ width: 16, height: 16 }} fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M5 12h14M13 6l6 6-6 6" /></svg>}
+                                        </button>
+                                    </div>
+
+                                    <div className="anim-btn">
+                                        <Link href="/singup" className="btn-secondary" style={{ width: "100%", border: "1px solid #d1d5db", borderRadius: 12, padding: "12px", color: "#374151", fontSize: "0.88rem", display: "flex", alignItems: "center", justifyContent: "center", fontWeight: 500, textDecoration: "none" }}>
+                                            ¿Aún no tienes una cuenta? ¡Regístrate!
+                                        </Link>
+                                    </div>
                                 </div>
-                            </div>
 
-                            <div className="anim-field">
-                                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 6 }}>
-                                    <label style={{ fontSize: "0.75rem", fontWeight: 600, color: "#4b5563", textTransform: "uppercase", letterSpacing: "0.07em" }}>Contraseña</label>
-                                    <button type="button" className="nav-link"
-                                        onClick={handleOlvidePassword}
-                                        style={{ fontSize: "0.78rem", color: "#63a19a", background: "none", border: "none", cursor: "pointer", fontWeight: 500 }}>
-                                        ¿Olvidaste tu contraseña?
+                                <div className="anim-btn" style={{ display: "flex", alignItems: "center", gap: 12, margin: "20px 0" }}>
+                                    <div style={{ flex: 1, height: 1, background: "#e5e7eb" }} />
+                                    <span style={{ fontSize: "0.7rem", color: "#9ca3af", textTransform: "uppercase", letterSpacing: "0.12em" }}>O continuar con</span>
+                                    <div style={{ flex: 1, height: 1, background: "#e5e7eb" }} />
+                                </div>
+
+                                <div className="anim-btn" style={{ display: "grid", gridTemplateColumns: "1fr", gap: 12 }}>
+                                    <button type="button" onClick={handleGoogle} className="btn-social"
+                                        style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 8, border: "1px solid #e5e7eb", borderRadius: 12, padding: "10px", fontSize: "0.88rem", color: "#374151", background: "white", cursor: "pointer" }}>
+                                        <svg viewBox="0 0 24 24" style={{ width: 16, height: 16 }} fill="currentColor">
+                                            <path d="M21.35 11.1h-9.18v2.98h5.27a4.52 4.52 0 0 1-1.95 2.96 6.06 6.06 0 0 1-3.32.9A6.25 6.25 0 0 1 5.9 11.82a6.25 6.25 0 0 1 6.27-6.25c1.46 0 2.78.5 3.81 1.49l2.09-2.09A9.3 9.3 0 0 0 12.17 2 9.1 9.1 0 0 0 5.7 4.7 9.25 9.25 0 0 0 3 11.82a9.25 9.25 0 0 0 2.7 7.12A9.1 9.1 0 0 0 12.17 22a8.9 8.9 0 0 0 6.08-2.37 6.25 6.25 0 0 0 2.1-4.81c0-.68-.05-1.28-.31-1.72Z" />
+                                        </svg>
+                                        Google
                                     </button>
                                 </div>
-                                <div className="input-wrap" style={{ display: "flex", alignItems: "center", gap: 8, border: "1px solid #d1d5db", borderRadius: 12, padding: "10px 14px", background: "white" }}>
-                                    <svg viewBox="0 0 24 24" style={{ width: 16, height: 16, color: "#9ca3af", flexShrink: 0 }} fill="none" stroke="currentColor" strokeWidth="2">
-                                        <rect x="3" y="11" width="18" height="11" rx="2" /><path d="M7 11V7a5 5 0 0 1 10 0v4" />
-                                    </svg>
-                                    <input type={showPassword ? "text" : "password"} placeholder="••••••••" value={password} onChange={e => setPassword(e.target.value)}
-                                        style={{ flex: 1, background: "transparent", border: "none", outline: "none", fontSize: "0.9rem", color: "#111827" }} />
-                                    {/* Botón interactivo para conmutar la visibilidad */}
-                                    <button type="button" onClick={() => setShowPassword(!showPassword)} style={{ background: "none", border: "none", cursor: "pointer", color: "#9ca3af", display: "flex", alignItems: "center", padding: 0 }}>
-                                        {showPassword ? <LuEyeOff size={16} /> : <LuEye size={16} />}
-                                    </button>
-                                </div>
-                            </div>
-
-                            <div className="anim-field">
-                                <label style={{ display: "inline-flex", alignItems: "center", gap: 8, fontSize: "0.85rem", color: "#6b7280", cursor: "pointer" }}>
-                                    <input type="checkbox" style={{ accentColor: "#4a8a85" }} />
-                                    Recordar sesión
-                                </label>
-                            </div>
-
-                            {error && (
-                                <div className="anim-field" style={{ background: "#fef2f2", border: "1px solid #fecaca", borderRadius: 10, padding: "8px 12px" }}>
-                                    <p style={{ margin: 0, fontSize: "0.82rem", color: "#dc2626" }}>{error}</p>
-                                </div>
-                            )}
-
-                            <div className="anim-btn">
-                                <button type="button" onClick={handleLogin} disabled={loading} className="btn-primary"
-                                    style={{ width: "100%", background: loading ? "#9ca3af" : "linear-gradient(135deg, #6b9e9a, #2d6560)", border: "none", borderRadius: 12, padding: "12px", color: "white", fontFamily: "'Poppins', sans-serif", fontWeight: 600, fontSize: "0.95rem", cursor: loading ? "not-allowed" : "pointer", display: "flex", alignItems: "center", justifyContent: "center", gap: 8 }}>
-                                    {loading ? "Entrando..." : "Iniciar Sesión"}
-                                    {!loading && <svg viewBox="0 0 24 24" style={{ width: 16, height: 16 }} fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M5 12h14M13 6l6 6-6 6" /></svg>}
-                                </button>
-                            </div>
-
-                            <div className="anim-btn">
-                                <Link href="/singup" className="btn-secondary" style={{ width: "100%", border: "1px solid #d1d5db", borderRadius: 12, padding: "12px", color: "#374151", fontSize: "0.88rem", display: "flex", alignItems: "center", justifyContent: "center", fontWeight: 500 }}>
-                                    ¿Aún no tienes una cuenta? ¡Regístrate!
-                                </Link>
-                            </div>
-                        </div>
-
-                        <div className="anim-btn" style={{ display: "flex", alignItems: "center", gap: 12, margin: "20px 0" }}>
-                            <div style={{ flex: 1, height: 1, background: "#e5e7eb" }} />
-                            <span style={{ fontSize: "0.7rem", color: "#9ca3af", textTransform: "uppercase", letterSpacing: "0.12em" }}>O continuar con</span>
-                            <div style={{ flex: 1, height: 1, background: "#e5e7eb" }} />
-                        </div>
-
-                        <div className="anim-btn" style={{ display: "grid", gridTemplateColumns: "1fr", gap: 12 }}>
-                            <button type="button" onClick={handleGoogle} className="btn-social"
-                                style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 8, border: "1px solid #e5e7eb", borderRadius: 12, padding: "10px", fontSize: "0.88rem", color: "#374151", background: "white", cursor: "pointer" }}>
-                                <svg viewBox="0 0 24 24" style={{ width: 16, height: 16 }} fill="currentColor">
-                                    <path d="M21.35 11.1h-9.18v2.98h5.27a4.52 4.52 0 0 1-1.95 2.96 6.06 6.06 0 0 1-3.32.9A6.25 6.25 0 0 1 5.9 11.82a6.25 6.25 0 0 1 6.27-6.25c1.46 0 2.78.5 3.81 1.49l2.09-2.09A9.3 9.3 0 0 0 12.17 2 9.1 9.1 0 0 0 5.7 4.7 9.25 9.25 0 0 0 3 11.82a9.25 9.25 0 0 0 2.7 7.12A9.1 9.1 0 0 0 12.17 22a8.9 8.9 0 0 0 6.08-2.37 6.25 6.25 0 0 0 2.1-4.81c0-.68-.05-1.28-.31-1.72Z" />
-                                </svg>
-                                Google
-                            </button>
-                        </div>
+                            </>
+                        ) : (
+                            // ================= VISTA B: RECUPERACIÓN DE CONTRASEÑA =================
+                            // Renderizamos tu componente secundario y le pasamos el handler para volver
+                            <RecuperarPassword
+                                onVolver={() => setShowReset(false)}
+                                emailInicial={email}        // 👈 Le pasa el email que ya tiene el Login
+                                onEmailChange={setEmail}    // 👈 Permite que si lo edita aquí, se guarde también en el login
+                            />
+                        )}
 
                         <p style={{ marginTop: 20, textAlign: "center", fontSize: "0.78rem", color: "#9ca3af" }}>
                             Mente en Calma. Bienestar y Salud Mental.
                         </p>
                     </div>
+
                 </div>
             </div>
         </div>
