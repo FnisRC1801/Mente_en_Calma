@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { auth, db } from "@/lib/firebase-client";
 import { doc, getDoc, collection, getDocs, query, where, addDoc, Timestamp } from "firebase/firestore";
+import { LuBrain, LuHeartPulse, LuHeart, LuSparkles, LuBaby, LuUser, LuUsers} from "react-icons/lu";
 
 interface Especialidad {
     id: string;
@@ -31,12 +32,12 @@ interface Paciente {
 const ESPECIALIDADES_SOLO_ADULTOS = ["Terapia de Parejas"];
 const ESPECIALIDADES_SOLO_MENORES = ["Psicología Infantil y Adolescente"];
 
-const ICONOS: Record<string, string> = {
-    "Neuropsicología": "🧠",
-    "Psicología Clínica": "🩺",
-    "Terapia de Parejas": "💑",
-    "Terapia del Duelo": "🕊️",
-    "Psicología Infantil y Adolescente": "🧒",
+const ICONOS: Record<string, React.ReactNode> = {
+    "Neuropsicología": <LuBrain />,
+    "Psicología Clínica": <LuHeartPulse />,
+    "Terapia de Parejas": <LuHeart />,
+    "Terapia del Duelo": <LuSparkles />, // O también LuLeaf (una hoja) para representar resiliencia/paz
+    "Psicología Infantil y Adolescente": <LuBaby />,
 };
 
 const DURACIONES = [
@@ -222,14 +223,39 @@ export default function NuevaCita() {
                             {/* Toggle paciente/tutor */}
                             <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", background: "#f3f4f6", borderRadius: 12, padding: 4, marginBottom: 24 }}>
                                 {[
-                                    { label: "🧑 Soy el Paciente", value: false },
-                                    { label: "👨‍👧 Soy Tutor", value: true },
-                                ].map(op => (
-                                    <button key={op.label} type="button" onClick={() => setEsTutor(op.value)}
-                                        style={{ padding: "10px", borderRadius: 10, border: "none", cursor: "pointer", fontFamily: "'Poppins', sans-serif", fontWeight: 600, fontSize: "0.88rem", transition: "all 0.2s", background: esTutor === op.value ? "white" : "transparent", color: esTutor === op.value ? "#2a5f5a" : "#9ca3af", boxShadow: esTutor === op.value ? "0 1px 4px rgba(0,0,0,0.1)" : "none" }}>
-                                        {op.label}
-                                    </button>
-                                ))}
+                                    { icon: <LuUser size={16} />, label: "Soy el Paciente", value: false },
+                                    { icon: <LuUsers size={16} />, label: "Soy Tutor", value: true },
+                                ].map(op => {
+                                    const activo = esTutor === op.value;
+                                    return (
+                                        <button
+                                            key={op.label}
+                                            type="button"
+                                            onClick={() => setEsTutor(op.value)}
+                                            style={{
+                                                padding: "10px",
+                                                borderRadius: 10,
+                                                border: "none",
+                                                cursor: "pointer",
+                                                fontFamily: "'Poppins', sans-serif",
+                                                fontWeight: 600,
+                                                fontSize: "0.88rem",
+                                                transition: "all 0.2s",
+                                                background: activo ? "white" : "transparent",
+                                                color: activo ? "#2a5f5a" : "#9ca3af",
+                                                boxShadow: activo ? "0 1px 4px rgba(0,0,0,0.1)" : "none",
+                                                // Flexbox para centrar e integrar el icono con el texto horizontalmente
+                                                display: "flex",
+                                                alignItems: "center",
+                                                justifyContent: "center",
+                                                gap: 8
+                                            }}
+                                        >
+                                            {op.icon}
+                                            {op.label}
+                                        </button>
+                                    );
+                                })}
                             </div>
 
                             <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
@@ -298,7 +324,20 @@ export default function NuevaCita() {
                                 {getEspecialidadesFiltradas().map(esp => (
                                     <button key={esp.id} type="button" onClick={() => { setEspecialidadSeleccionada(esp.nombre); setDoctorSeleccionado(null); }}
                                         style={{ padding: "16px 12px", borderRadius: 14, border: `2px solid ${especialidadSeleccionada === esp.nombre ? "#4a8a85" : "#e5e7eb"}`, background: especialidadSeleccionada === esp.nombre ? "#f0f9f7" : "white", cursor: "pointer", transition: "all 0.2s", display: "flex", flexDirection: "column", alignItems: "center", gap: 8 }}>
-                                        <span style={{ fontSize: "1.8rem" }}>{ICONOS[esp.nombre] ?? "🧠"}</span>
+                                        <span
+                                            style={{
+                                                fontSize: "1.8rem",
+                                                display: "flex",
+                                                alignItems: "center",
+                                                justifyContent: "center",
+                                                // El icono cambia a color verde oscuro si está seleccionado, o gris si no
+                                                color: especialidadSeleccionada === esp.nombre ? "#4a8a85" : "#9ca3af",
+                                                transition: "color 0.2s"
+                                            }}
+                                        >
+                                            {/* Buscamos el icono en el objeto, pasándole un tamaño base con cloneElement si quieres controlarlo desde aquí, o usando un fallback */}
+                                            {ICONOS[esp.nombre] ?? <LuBrain />}
+                                        </span>
                                         <span style={{ fontSize: "0.78rem", fontWeight: 600, color: especialidadSeleccionada === esp.nombre ? "#2a5f5a" : "#374151", textAlign: "center", lineHeight: 1.3 }}>{esp.nombre}</span>
                                     </button>
                                 ))}

@@ -3,8 +3,9 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
-import { signInWithEmailAndPassword, signInWithPopup, GoogleAuthProvider } from "firebase/auth";
+import { signInWithEmailAndPassword, signInWithPopup, GoogleAuthProvider, sendPasswordResetEmail } from "firebase/auth";
 import { auth } from "@/lib/firebase-client";
+import { LuEye, LuEyeOff } from "react-icons/lu";
 
 export default function Login() {
     const router = useRouter();
@@ -12,6 +13,12 @@ export default function Login() {
     const [password, setPassword] = useState("");
     const [error, setError] = useState("");
     const [loading, setLoading] = useState(false);
+    const [resetEmail, setResetEmail] = useState("");
+    const [resetEnviado, setResetEnviado] = useState(false);
+    const [showReset, setShowReset] = useState(false);
+
+    // Estado para controlar la visibilidad de la contraseña
+    const [showPassword, setShowPassword] = useState(false);
 
     async function handleLogin() {
         setError(""); setLoading(true);
@@ -88,6 +95,20 @@ export default function Login() {
         }
     }
 
+    async function handleOlvidePassword() {
+    setShowReset(true);
+}
+
+async function handleEnviarReset() {
+    if (!resetEmail.trim()) { setError("Ingresa tu correo."); return; }
+    try {
+        await sendPasswordResetEmail(auth, resetEmail.trim());
+        setResetEnviado(true);
+    } catch {
+        setError("No encontramos una cuenta con ese correo.");
+    }
+}
+
     return (
         <div className="relative min-h-screen" style={{ background: "linear-gradient(to bottom, #5f817d, #0f1e33)" }}>
             <header style={{ position: "absolute", top: 0, width: "100%", padding: "20px 40px" }} className="header-anim">
@@ -131,14 +152,22 @@ export default function Login() {
                             <div className="anim-field">
                                 <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 6 }}>
                                     <label style={{ fontSize: "0.75rem", fontWeight: 600, color: "#4b5563", textTransform: "uppercase", letterSpacing: "0.07em" }}>Contraseña</label>
-                                    <button type="button" className="nav-link" style={{ fontSize: "0.78rem", color: "#63a19a", background: "none", border: "none", cursor: "pointer", fontWeight: 500 }}>¿Olvidaste tu contraseña?</button>
+                                    <button type="button" className="nav-link"
+                                        onClick={handleOlvidePassword}
+                                        style={{ fontSize: "0.78rem", color: "#63a19a", background: "none", border: "none", cursor: "pointer", fontWeight: 500 }}>
+                                        ¿Olvidaste tu contraseña?
+                                    </button>
                                 </div>
                                 <div className="input-wrap" style={{ display: "flex", alignItems: "center", gap: 8, border: "1px solid #d1d5db", borderRadius: 12, padding: "10px 14px", background: "white" }}>
                                     <svg viewBox="0 0 24 24" style={{ width: 16, height: 16, color: "#9ca3af", flexShrink: 0 }} fill="none" stroke="currentColor" strokeWidth="2">
                                         <rect x="3" y="11" width="18" height="11" rx="2" /><path d="M7 11V7a5 5 0 0 1 10 0v4" />
                                     </svg>
-                                    <input type="password" placeholder="••••••••" value={password} onChange={e => setPassword(e.target.value)}
+                                    <input type={showPassword ? "text" : "password"} placeholder="••••••••" value={password} onChange={e => setPassword(e.target.value)}
                                         style={{ flex: 1, background: "transparent", border: "none", outline: "none", fontSize: "0.9rem", color: "#111827" }} />
+                                    {/* Botón interactivo para conmutar la visibilidad */}
+                                    <button type="button" onClick={() => setShowPassword(!showPassword)} style={{ background: "none", border: "none", cursor: "pointer", color: "#9ca3af", display: "flex", alignItems: "center", padding: 0 }}>
+                                        {showPassword ? <LuEyeOff size={16} /> : <LuEye size={16} />}
+                                    </button>
                                 </div>
                             </div>
 
@@ -184,7 +213,6 @@ export default function Login() {
                                 </svg>
                                 Google
                             </button>
-
                         </div>
 
                         <p style={{ marginTop: 20, textAlign: "center", fontSize: "0.78rem", color: "#9ca3af" }}>

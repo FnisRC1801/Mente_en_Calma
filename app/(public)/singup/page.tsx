@@ -3,15 +3,11 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState, useEffect } from "react";
-import {
-    createUserWithEmailAndPassword,
-    updateProfile,
-    signInWithPopup,
-    GoogleAuthProvider,
-    sendEmailVerification
-} from "firebase/auth";
+import { createUserWithEmailAndPassword, updateProfile, signInWithPopup, GoogleAuthProvider, sendEmailVerification } from "firebase/auth";
 import { auth, db } from "@/lib/firebase-client";
 import { collection, addDoc, getDocs, doc, setDoc, getDoc, Timestamp } from "firebase/firestore";
+import { LuUser, LuStethoscope, LuEye, LuEyeOff, LuMail } from "react-icons/lu";
+import { FaMars, FaVenus } from "react-icons/fa6";
 
 
 function getStrength(pwd: string) {
@@ -47,6 +43,134 @@ const inputStyle: React.CSSProperties = {
     outline: "none", fontSize: "0.9rem", color: "#111827",
 };
 
+function VerificandoCorreo({ email, auth, router, setError, error, tipo, name, sexo, fechaNacimiento, telefono, especialidad, otraEspecialidad, otraDescripcion, gradoEstudios, consultorio, cedulaFile, db, calcularEdad }: any) {
+    useEffect(() => {
+        const unsubscribe = auth.onAuthStateChanged((user: any) => {
+            if (user) {
+                const intervalo = setInterval(async () => {
+                    try {
+                        await user.reload();
+
+                        if (user.emailVerified) {
+                            clearInterval(intervalo);
+                            const now = Timestamp.now();
+                            const especialidadFinal = especialidad === "otra" ? otraEspecialidad.trim() : especialidad;
+
+                            if (tipo === "paciente") {
+                                await setDoc(doc(db, "pacientes", user.uid), {
+                                    nombre: name.trim(),
+                                    email: email.trim(),
+                                    sexo,
+                                    fechaNacimiento,
+                                    edad: calcularEdad(fechaNacimiento),
+                                    telefono: Number(telefono),
+                                    role: "paciente",
+                                    emailVerificado: true,
+                                    createdAt: now,
+                                    updatedAt: now,
+                                });
+                            } else {
+                                if (especialidad === "otra" && otraEspecialidad.trim()) {
+                                    await addDoc(collection(db, "especialidades"), {
+                                        nombre: otraEspecialidad.trim(),
+                                        descripcion: otraDescripcion.trim(),
+                                        createdAt: now,
+                                    });
+                                }
+                                const cedulaFormData = new FormData();
+                                cedulaFormData.append("file", cedulaFile);
+                                cedulaFormData.append("tipo", "cedula");
+                                const cedulaRes = await fetch("/api/upload", {
+                                    method: "POST",
+                                    body: cedulaFormData,
+                                });
+                                const cedulaData = await cedulaRes.json();
+                                const cedulaUrl = cedulaData.data.url;
+
+                                await setDoc(doc(db, "doctores", user.uid), {
+                                    nombre: name.trim(),
+                                    email: email.trim(),
+                                    sexo,
+                                    telefono: Number(telefono),
+                                    especialidad: especialidadFinal,
+                                    gradoEstudios,
+                                    consultorio: consultorio.trim(),
+                                    cedulaUrl,
+                                    cedulaArchivoNombre: cedulaFile.name,
+                                    cedulaArchivoTipo: cedulaFile.type,
+                                    role: "psicologo",
+                                    activo: true,
+                                    emailVerificado: true,
+                                    createdAt: now,
+                                    updatedAt: now,
+                                });
+                            }
+
+                            const token = await user.getIdToken();
+                            await fetch("/api/session", {
+                                method: "POST",
+                                body: JSON.stringify({ token }),
+                                headers: { "Content-Type": "application/json" },
+                            });
+
+                            const roleRes = await fetch("/api/auth/verify-role");
+                            const { role } = await roleRes.json();
+                            if (role === "psicologo") router.push("/dashboard-psico");
+                            else router.push("/dashboard");
+                        }
+                    } catch (e: any) {
+                        setError(e.message ?? "Error al guardar datos.");
+                    }
+                }, 3000);
+
+                return () => clearInterval(intervalo);
+            }
+        });
+
+        return () => unsubscribe();
+    }, [auth, router, db, tipo, name, email, sexo, fechaNacimiento, telefono, especialidad, otraEspecialidad, otraDescripcion, gradoEstudios, consultorio, cedulaFile]);
+
+    return (
+        <div className="relative min-h-screen" style={{ background: "linear-gradient(to bottom, #5f817d, #0f1e33)" }}>
+            <div className="flex items-center justify-center min-h-screen px-4">
+                <div style={{ background: "white", borderRadius: 24, padding: "48px 40px", maxWidth: 480, width: "100%", textAlign: "center", boxShadow: "0 20px 60px rgba(0,0,0,0.2)" }}>
+                    <div style={{ width: 64, height: 64, borderRadius: "50%", background: "#f0f9f7", display: "flex", alignItems: "center", justifyContent: "center", margin: "0 auto 20px" }}>
+                        <LuMail size={28} color="#4a8a85" />
+                    </div>
+                    <h2 style={{ fontFamily: "'Poppins', sans-serif", fontWeight: 700, fontSize: "1.5rem", color: "#1a2e2c", margin: "0 0 12px" }}>
+                        ¡Verifica tu correo!
+                    </h2>
+                    <p style={{ fontSize: "0.9rem", color: "#6b7280", lineHeight: 1.6, margin: "0 0 8px" }}>
+                        Te enviamos un correo de verificación a:
+                    </p>
+                    <p style={{ fontSize: "0.95rem", color: "#2a5f5a", fontWeight: 600, margin: "0 0 16px" }}>
+                        {email}
+                    </p>
+                    <p style={{ fontSize: "0.85rem", color: "#9ca3af", lineHeight: 1.5, margin: "0 0 16px" }}>
+                        Una vez que verifiques tu correo serás redirigido automáticamente al Inicio.
+                    </p>
+
+                    {/* Corregido a justifyContent en esta línea */}
+                    <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 8, color: "#4a8a85", fontSize: "0.85rem", margin: "0 0 20px" }}>
+                        <div style={{ width: 8, height: 8, borderRadius: "50%", background: "#4a8a85" }} />
+                        Esperando verificación...
+                    </div>
+
+                    {/* Nota de Spam al final con coordenadas equilibradas */}
+                    <p style={{ fontSize: "0.78rem", color: "#9ca3af", lineHeight: 1.4, margin: "0 0 12px", fontStyle: "italic" }}>
+                        (Si no ves el correo, revisa tu carpeta de spam)
+                    </p>
+                    {error && (
+                        <div style={{ background: "#fef2f2", border: "1px solid #fecaca", borderRadius: 10, padding: "8px 12px", marginTop: 16 }}>
+                            <p style={{ margin: 0, fontSize: "0.82rem", color: "#dc2626" }}>{error}</p>
+                        </div>
+                    )}
+                </div>
+            </div>
+        </div>
+    );
+}
+
 export default function SignUp() {
     const router = useRouter();
     const [tipo, setTipo] = useState<"paciente" | "doctor">("paciente");
@@ -54,12 +178,17 @@ export default function SignUp() {
     // Campos comunes
     const [name, setName] = useState("");
     const [email, setEmail] = useState("");
-    const [sexo, setSexo] = useState<"M" | "F" | "">("");
+    const [sexo, setSexo] = useState<"M" | "F" | "Otro" | "">("");
+    const [fechaNacimiento, setFechaNacimiento] = useState("");
     const [password, setPassword] = useState("");
     const [confirm, setConfirm] = useState("");
     const [pwdError, setPwdError] = useState("");
     const [aceptaTerminos, setAceptaTerminos] = useState(false);
     const [showTerminos, setShowTerminos] = useState(false);
+
+    // Visibilidad de las contraseñas
+    const [showPassword, setShowPassword] = useState(false);
+    const [showConfirm, setShowConfirm] = useState(false);
 
 
     // Campos doctor
@@ -102,6 +231,17 @@ export default function SignUp() {
         const letters = (val.match(/[a-zA-Z]/g) || []).length;
         const numbers = (val.match(/\d/g) || []).length;
         setPwdError(letters < 5 || numbers < 1 ? "Mínimo 5 letras y 1 número" : "");
+    }
+
+    function calcularEdad(fechaNac: string): number {
+        const hoy = new Date();
+        const nacimiento = new Date(fechaNac);
+        let edadCalculada = hoy.getFullYear() - nacimiento.getFullYear();
+        const mes = hoy.getMonth() - nacimiento.getMonth();
+        if (mes < 0 || (mes === 0 && hoy.getDate() < nacimiento.getDate())) {
+            edadCalculada--;
+        }
+        return edadCalculada;
     }
 
     async function handleGoogle() {
@@ -154,6 +294,13 @@ export default function SignUp() {
         if (!name.trim()) { setError("Ingresa tu nombre completo."); return; }
         if (!email.trim()) { setError("Ingresa tu correo."); return; }
         if (!sexo) { setError("Selecciona tu sexo."); return; }
+
+        if (tipo === "paciente") {
+            if (!fechaNacimiento) { setError("Ingresa tu fecha de nacimiento."); return; }
+            const edadPaciente = calcularEdad(fechaNacimiento);
+            if (edadPaciente < 18) { setError("Debes ser mayor de 18 años para registrarte."); return; }
+        }
+
         if (!modoGoogle && pwdError) { setError(pwdError); return; }
         if (!modoGoogle && !password) { setError("Ingresa una contraseña."); return; }
         if (!modoGoogle && password !== confirm) { setError("Las contraseñas no coinciden."); return; }
@@ -193,8 +340,8 @@ export default function SignUp() {
                 uid = googleUser.uid;
             } else {
                 const cred = await createUserWithEmailAndPassword(auth, email, password);
-                await sendEmailVerification(cred.user);
                 if (name.trim()) await updateProfile(cred.user, { displayName: name.trim() });
+                await sendEmailVerification(cred.user);
                 uid = cred.user.uid;
             }
 
@@ -206,15 +353,13 @@ export default function SignUp() {
                     nombre: name.trim(),
                     email: email.trim(),
                     sexo,
-                    telefono: Number(telefono),  // ← agrega esta línea
+                    fechaNacimiento,
+                    edad: calcularEdad(fechaNacimiento),
+                    telefono: Number(telefono),
                     role: "paciente",
-
                     emailVerificado: false,
-
-
                     createdAt: now,
                     updatedAt: now,
-
                 });
             } else {
                 // Si especialidad nueva → guardar en colección especialidades
@@ -253,9 +398,7 @@ export default function SignUp() {
                     cedulaArchivoTipo: cedulaFile!.type,
                     role: "psicologo",
                     activo: true,
-
                     emailVerificado: false,
-
                     createdAt: now,
                     updatedAt: now,
                 });
@@ -270,11 +413,7 @@ export default function SignUp() {
                 headers: { "Content-Type": "application/json" },
             });
 
-            router.push(
-                tipo === "paciente"
-                    ? "/dashboard"
-                    : "/dashboard-psico"
-            );
+            setEnviado(true);
 
         } catch (e: any) {
             if (e.code === "auth/email-already-in-use") setError("Este correo ya está registrado.");
@@ -285,19 +424,26 @@ export default function SignUp() {
     // ── Pantalla de éxito doctor ───────────────────────────────────────────────
     if (enviado) {
         return (
-            <div className="relative min-h-screen" style={{ background: "linear-gradient(to bottom, #5f817d, #0f1e33)" }}>
-                <div className="flex items-center justify-center min-h-screen px-4">
-                    <div style={{ background: "white", borderRadius: 24, padding: "48px 40px", maxWidth: 480, width: "100%", textAlign: "center", boxShadow: "0 20px 60px rgba(0,0,0,0.2)" }}>
-                        <div style={{ width: 64, height: 64, borderRadius: "50%", background: "#f0f9f7", display: "flex", alignItems: "center", justifyContent: "center", margin: "0 auto 20px", fontSize: "2rem" }}>✅</div>
-                        <h2 style={{ fontFamily: "'Poppins', sans-serif", fontWeight: 700, fontSize: "1.5rem", color: "#1a2e2c", margin: "0 0 12px" }}>¡Cuenta creada!</h2>
-                        <p style={{ fontSize: "0.9rem", color: "#6b7280", lineHeight: 1.6, margin: "0 0 8px" }}>Tu cuenta profesional ha sido creada exitosamente.</p>
-                        <p style={{ fontSize: "0.88rem", color: "#4a8a85", fontWeight: 500, margin: "0 0 28px" }}>Bienvenido/a, <strong>{name}</strong>.</p>
-                        <Link href="/login" style={{ display: "inline-flex", alignItems: "center", gap: 8, background: "linear-gradient(135deg, #6b9e9a, #2d6560)", color: "white", borderRadius: 12, padding: "11px 24px", fontSize: "0.9rem", fontWeight: 600, textDecoration: "none" }}>
-                            Ir al inicio de sesión →
-                        </Link>
-                    </div>
-                </div>
-            </div>
+            <VerificandoCorreo
+                email={email}
+                auth={auth}
+                router={router}
+                setError={setError}
+                error={error}
+                tipo={tipo}
+                name={name}
+                sexo={sexo}
+                fechaNacimiento={fechaNacimiento}
+                telefono={telefono}
+                especialidad={especialidad}
+                otraEspecialidad={otraEspecialidad}
+                otraDescripcion={otraDescripcion}
+                gradoEstudios={gradoEstudios}
+                consultorio={consultorio}
+                cedulaFile={cedulaFile}
+                db={db}
+                calcularEdad={calcularEdad}
+            />
         );
     }
 
@@ -313,7 +459,7 @@ export default function SignUp() {
                         <h2 style={{ fontFamily: "'Poppins', sans-serif", fontWeight: 700, fontSize: "1.3rem", color: "#1a2e2c", margin: "0 0 16px" }}>Términos y Condiciones</h2>
                         <div style={{ fontSize: "0.88rem", color: "#4b5563", lineHeight: 1.7, display: "flex", flexDirection: "column", gap: 12 }}>
                             <p><strong style={{ color: "#2a5f5a" }}>1. Uso de la plataforma</strong><br />Al registrarte en Mente en Calma, aceptas utilizar la plataforma exclusivamente para fines relacionados con la salud mental y el bienestar.</p>
-                            <p><strong style={{ color: "#2a5f5a" }}>2. Privacidad y datos</strong><br />Tu información personal será tratada con estricta confidencialidad conforme a las leyes de protección de datos vigentes.</p>
+                            <p><strong style={{ color: "#2a5f5a" }}>2. Privacidad y datos</strong><br />Tu información personal será tratada con estricta confidencialidad conforme a las leyes de protección de datos vigiciones.</p>
                             <p><strong style={{ color: "#2a5f5a" }}>3. Responsabilidad profesional</strong><br />{tipo === "doctor" ? "Como profesional, eres responsable de la veracidad de tu cédula y datos profesionales proporcionados." : "Como paciente, la información que compartas con tu psicólogo será confidencial."}</p>
                             <p><strong style={{ color: "#2a5f5a" }}>4. Citas y cancelaciones</strong><br />Las citas deben cancelarse con al menos 24 horas de anticipación. El incumplimiento reiterado puede resultar en la suspensión de la cuenta.</p>
                             <p><strong style={{ color: "#2a5f5a" }}>5. Modificaciones</strong><br />Mente en Calma se reserva el derecho de modificar estos términos con previo aviso a los usuarios registrados.</p>
@@ -374,12 +520,36 @@ export default function SignUp() {
 
                         {/* Toggle */}
                         <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", background: "#f3f4f6", borderRadius: 12, padding: 4, marginBottom: 24 }}>
-                            {(["paciente", "doctor"] as const).map(t => (
-                                <button key={t} type="button" onClick={() => { setTipo(t); setError(""); }}
-                                    style={{ padding: "10px", borderRadius: 10, border: "none", cursor: "pointer", fontFamily: "'Poppins', sans-serif", fontWeight: 600, fontSize: "0.88rem", transition: "all 0.2s ease", background: tipo === t ? "white" : "transparent", color: tipo === t ? "#2a5f5a" : "#9ca3af", boxShadow: tipo === t ? "0 1px 4px rgba(0,0,0,0.1)" : "none", display: "flex", alignItems: "center", justifyContent: "center", gap: 6 }}>
-                                    {t === "paciente" ? "🧑 Soy Paciente" : "🩺 Soy Doctor"}
-                                </button>
-                            ))}
+                            {(["paciente", "doctor"] as const).map(t => {
+                                const activo = tipo === t;
+                                return (
+                                    <button
+                                        key={t}
+                                        type="button"
+                                        onClick={() => { setTipo(t); setError(""); }}
+                                        style={{
+                                            padding: "10px",
+                                            borderRadius: 10,
+                                            border: "none",
+                                            cursor: "pointer",
+                                            fontFamily: "'Poppins', sans-serif",
+                                            fontWeight: 600,
+                                            fontSize: "0.88rem",
+                                            transition: "all 0.2s ease",
+                                            background: activo ? "white" : "transparent",
+                                            color: activo ? "#2a5f5a" : "#9ca3af",
+                                            boxShadow: activo ? "0 1px 4px rgba(0,0,0,0.1)" : "none",
+                                            display: "flex",
+                                            alignItems: "center",
+                                            justifyContent: "center",
+                                            gap: 6
+                                        }}
+                                    >
+                                        {t === "paciente" ? <LuUser size={16} /> : <LuStethoscope size={16} />}
+                                        {t === "paciente" ? "Soy Paciente" : "Soy Doctor"}
+                                    </button>
+                                );
+                            })}
                         </div>
 
                         <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
@@ -407,15 +577,51 @@ export default function SignUp() {
                             {/* Sexo — ambos */}
                             <div className="anim-field">
                                 <label style={labelStyle}>Sexo</label>
-                                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
-                                    {(["M", "F"] as const).map(s => (
-                                        <button key={s} type="button" onClick={() => setSexo(s)}
-                                            style={{ padding: "10px 8px", borderRadius: 12, border: `2px solid ${sexo === s ? "#4a8a85" : "#d1d5db"}`, background: sexo === s ? "#f0f9f7" : "white", color: sexo === s ? "#2a5f5a" : "#6b7280", fontWeight: sexo === s ? 600 : 400, fontSize: "0.88rem", cursor: "pointer", transition: "all 0.15s ease", fontFamily: "'Poppins', sans-serif", display: "flex", alignItems: "center", justifyContent: "center", gap: 6 }}>
-                                            {s === "M" ? "👨 Masculino" : "👩 Femenino"}
-                                        </button>
-                                    ))}
+                                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 10 }}>
+                                    {(["M", "F", "Otro"] as const).map(s => {
+                                        const activo = sexo === s;
+                                        return (
+                                            <button
+                                                key={s}
+                                                type="button"
+                                                onClick={() => setSexo(s)}
+                                                style={{
+                                                    padding: "10px 8px",
+                                                    borderRadius: 12,
+                                                    border: `2px solid ${activo ? "#4a8a85" : "#d1d5db"}`,
+                                                    background: activo ? "#f0f9f7" : "white",
+                                                    color: activo ? "#2a5f5a" : "#6b7280",
+                                                    fontWeight: activo ? 600 : 400,
+                                                    fontSize: "0.88rem",
+                                                    cursor: "pointer",
+                                                    transition: "all 0.15s ease",
+                                                    fontFamily: "'Poppins', sans-serif",
+                                                    display: "flex",
+                                                    alignItems: "center",
+                                                    justifyContent: "center",
+                                                    gap: 6
+                                                } as React.CSSProperties}
+                                            >
+                                                {s === "M" && <FaMars size={16} />}
+                                                {s === "F" && <FaVenus size={16} />}
+                                                {s === "Otro" && <LuUser size={16} />}
+                                                {s === "M" ? "Masculino" : s === "F" ? "Femenino" : "Otro"}
+                                            </button>
+                                        );
+                                    })}
                                 </div>
                             </div>
+
+                            {/* Fecha de Nacimiento — Solo para Pacientes */}
+                            {tipo === "paciente" && (
+                                <div className="anim-field">
+                                    <label style={labelStyle}>Fecha de nacimiento</label>
+                                    <div className="input-wrap" style={inputWrap()}>
+                                        <svg viewBox="0 0 24 24" style={{ width: 16, height: 16, color: "#9ca3af", flexShrink: 0 }} fill="none" stroke="currentColor" strokeWidth="2"><rect x="3" y="4" width="18" height="18" rx="2" ry="2" /><line x1="16" y1="2" x2="16" y2="6" /><line x1="8" y1="2" x2="8" y2="6" /><line x1="3" y1="10" x2="21" y2="10" /></svg>
+                                        <input type="date" value={fechaNacimiento} onChange={e => setFechaNacimiento(e.target.value)} style={inputStyle} />
+                                    </div>
+                                </div>
+                            )}
 
                             {/* Teléfono — ambos */}
                             <div className="anim-field">
@@ -510,7 +716,10 @@ export default function SignUp() {
                                     <label style={labelStyle}>Contraseña</label>
                                     <div className="input-wrap" style={inputWrap(!!pwdError)}>
                                         <svg viewBox="0 0 24 24" style={{ width: 16, height: 16, color: "#9ca3af", flexShrink: 0 }} fill="none" stroke="currentColor" strokeWidth="2"><rect x="3" y="11" width="18" height="11" rx="2" /><path d="M7 11V7a5 5 0 0 1 10 0v4" /></svg>
-                                        <input type="password" placeholder="••••••••" value={password} onChange={handlePasswordChange} style={inputStyle} />
+                                        <input type={showPassword ? "text" : "password"} placeholder="••••••••" value={password} onChange={handlePasswordChange} style={inputStyle} />
+                                        <button type="button" onClick={() => setShowPassword(!showPassword)} style={{ background: "none", border: "none", cursor: "pointer", color: "#9ca3af", display: "flex", alignItems: "center", padding: 0 }}>
+                                            {showPassword ? <LuEyeOff size={16} /> : <LuEye size={16} />}
+                                        </button>
                                     </div>
                                     {password.length > 0 && (<><div className="strength-bar-track"><div className="strength-bar-fill" style={{ width: strength.width, background: strength.color }} /></div><p className="strength-label" style={{ color: strength.color }}>{strength.label}</p></>)}
                                     {pwdError && <p style={{ fontSize: "0.75rem", color: "#ef4444", marginTop: 4 }}>{pwdError}</p>}
@@ -524,7 +733,10 @@ export default function SignUp() {
                                     <label style={labelStyle}>Confirmar contraseña</label>
                                     <div className="input-wrap" style={inputWrap()}>
                                         <svg viewBox="0 0 24 24" style={{ width: 16, height: 16, color: "#9ca3af", flexShrink: 0 }} fill="none" stroke="currentColor" strokeWidth="2"><rect x="3" y="11" width="18" height="11" rx="2" /><path d="M7 11V7a5 5 0 0 1 10 0v4" /></svg>
-                                        <input type="password" placeholder="••••••••" value={confirm} onChange={e => setConfirm(e.target.value)} style={inputStyle} />
+                                        <input type={showConfirm ? "text" : "password"} placeholder="••••••••" value={confirm} onChange={e => setConfirm(e.target.value)} style={inputStyle} />
+                                        <button type="button" onClick={() => setShowConfirm(!showConfirm)} style={{ background: "none", border: "none", cursor: "pointer", color: "#9ca3af", display: "flex", alignItems: "center", padding: 0 }}>
+                                            {showConfirm ? <LuEyeOff size={16} /> : <LuEye size={16} />}
+                                        </button>
                                     </div>
                                 </div>
                             )}
