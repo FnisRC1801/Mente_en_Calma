@@ -380,37 +380,3 @@ input[type="number"] {
   background-color: #d1d5db !important;
 }
 
-/* Tema oscuro */
-.dark body {
-    background: #0f172a !important;
-    color: #f1f5f9 !important;
-}
-
-.dark [style*="background: white"] {
-    background: #1e293b !important;
-    color: #f1f5f9 !important;
-}
-
-.dark [style*="background: #f8fafb"] {
-    background: #0f172a !important;
-}
-
-.dark [style*="background: #f9fafb"] {
-    background: #1a2744 !important;
-}
-
-.dark [style*="color: #1a2e2c"] {
-    color: #f1f5f9 !important;
-}
-
-.dark [style*="color: #374151"] {
-    color: #cbd5e1 !important;
-}
-
-.dark [style*="color: #6b7280"] {
-    color: #94a3b8 !important;
-}
-
-.dark [style*="border: 1px solid #e5e7eb"] {
-    border-color: #334155 !important;
-}

@@ -35,7 +35,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
     }, []);
 
     const NAV_ITEMS = [
-        { icon: <LuLayoutDashboard size={18} />, label: "Dashboard", ruta: "/dashboard" },
+        { icon: <LuLayoutDashboard size={18} />, label: "Inicio", ruta: "/dashboard" },
         { icon: <LuCalendarDays size={18} />, label: "Mis Citas", ruta: "/dashboard/mis-citas" },
         { icon: <LuMessageSquare size={18} />, label: "Mensajes", ruta: "/dashboard/mensajes" },
         { icon: <LuClipboardList size={18} />, label: "Historial Médico", ruta: "/dashboard/historial" },
