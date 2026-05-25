@@ -362,7 +362,6 @@ export default function NuevaCita() {
                                 {[
                                     { icon: <LuUser size={15} />, label: "Soy el Paciente", value: "yo" },
                                     { icon: <LuUsers size={15} />, label: "Soy Tutor", value: "tutor" },
-                                    { icon: <LuUser size={15} />, label: "No es para mí", value: "otro" },
                                 ].map(op => {
                                     const activo = esTutor === (op.value !== "yo") && !(op.value === "otro" && !esTutor);
                                     const seleccionado = (op.value === "yo" && !esTutor) || (op.value === "tutor" && esTutor);
