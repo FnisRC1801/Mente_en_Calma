@@ -276,9 +276,9 @@ export default function MisCitas() {
                             </div>
                         )}
                         <div style={{ display: "flex", gap: 10 }}>
-                            <button onClick={() => setCitaSeleccionada(null)}
+                            <button onClick={() => { router.push(`/dashboard/cita/${citaSeleccionada.id}`); setCitaSeleccionada(null); }}
                                 style={{ flex: 1, padding: "10px", borderRadius: 12, border: "1px solid #d1d5db", background: "white", cursor: "pointer", fontSize: "0.85rem", fontFamily: "'Montserrat', sans-serif" }}>
-                                Cerrar
+                                Ver detalles
                             </button>
                             {(citaSeleccionada.estado === "PENDIENTE" || citaSeleccionada.estado === "ACEPTADA") && (
                                 <button onClick={() => { router.push(`/dashboard/cita/${citaSeleccionada.id}/editar`); setCitaSeleccionada(null); }}
