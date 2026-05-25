@@ -42,5 +42,5 @@ export async function getPacienteByUid(uid: string): Promise<Paciente | null> {
     fotoUrl: d.fotoUrl ? String(d.fotoUrl) : undefined,   // 👈 agrega
     createdAt: d.createdAt?.toDate?.().toISOString() ?? "",
     updatedAt: d.updatedAt?.toDate?.().toISOString() ?? "",
-};
+};    
 }

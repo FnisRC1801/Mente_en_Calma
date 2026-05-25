@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { useRouter, usePathname } from "next/navigation";
 import { auth } from "@/lib/firebase-client";
+import { ThemeProvider } from "next-themes";
 import "./globals.css";
 
 export default function RootLayout({
@@ -32,36 +33,38 @@ export default function RootLayout({
   }, [pathname, router]);
 
   return (
-    <html lang="es">
+    <html lang="es" suppressHydrationWarning>
       <body>
-        {loadingAuth ? (
-          <div style={{ 
-            minHeight: "100vh", 
-            display: "flex", 
-            alignItems: "center", 
-            justifyContent: "center", 
-            background: "#f8fafb",
-            flexDirection: "column",
-            gap: "14px"
-          }}>
-            <div style={{
-              width: "32px",
-              height: "32px",
-              border: "3px solid #e5e7eb",
-              borderTopColor: "#4a8a85",
-              borderRadius: "50%",
-              animation: "spin 1s linear infinite"
-            }} />
-            <p style={{ fontFamily: "sans-serif", color: "#4a8a85", fontSize: "0.85rem", fontWeight: 500, letterSpacing: "0.02em" }}>
-              Sincronizando sesión segura...
-            </p>
-            <style>{`
-              @keyframes spin { to { transform: rotate(360deg); } }
-            `}</style>
-          </div>
-        ) : (
-          children
-        )}
+        <ThemeProvider attribute="class" defaultTheme="light" enableSystem={false}>
+          {loadingAuth ? (
+            <div style={{ 
+              minHeight: "100vh", 
+              display: "flex", 
+              alignItems: "center", 
+              justifyContent: "center", 
+              background: "#f8fafb",
+              flexDirection: "column",
+              gap: "14px"
+            }}>
+              <div style={{
+                width: "32px",
+                height: "32px",
+                border: "3px solid #e5e7eb",
+                borderTopColor: "#4a8a85",
+                borderRadius: "50%",
+                animation: "spin 1s linear infinite"
+              }} />
+              <p style={{ fontFamily: "sans-serif", color: "#4a8a85", fontSize: "0.85rem", fontWeight: 500, letterSpacing: "0.02em" }}>
+                Sincronizando sesión segura...
+              </p>
+              <style>{`
+                @keyframes spin { to { transform: rotate(360deg); } }
+              `}</style>
+            </div>
+          ) : (
+            children
+          )}
+        </ThemeProvider>
       </body>
     </html>
   );

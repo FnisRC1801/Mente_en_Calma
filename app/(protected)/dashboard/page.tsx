@@ -59,8 +59,6 @@ export default function DashboardPaciente() {
     const [loading, setLoading] = useState(true);
     const [mesActual] = useState(new Date());
 
-    const [menuAbierto, setMenuAbierto] = useState(false);
-
     useEffect(() => {
         async function cargarDatos() {
             const user = auth.currentUser;
@@ -107,130 +105,19 @@ export default function DashboardPaciente() {
 
 
     return (
-        <div style={{ minHeight: "100vh", background: "#f8fafb", display: "flex", fontFamily: "'Montserrat', sans-serif", position: "relative", overflowX: "hidden" }}>
+        <div style={{ minHeight: "100vh", background: "#f8fafb", fontFamily: "'Montserrat', sans-serif" }}>
 
-            <style>{`
-                aside {
-                    transition: transform 0.3s ease-in-out;
-                }
-                main {
-                    transition: margin-left 0.3s ease-in-out;
-                }
-                @media (max-width: 992px) {
-                    aside {
-                        transform: ${menuAbierto ? "translateX(0)" : "translateX(-100%)"};
-                        box-shadow: ${menuAbierto ? "4px 0 24px rgba(0,0,0,0.1)" : "none"};
-                    }
-                    main {
-                        margin-left: 0 !important;
-                    }
-                    .btn-hamburguesa {
-                        display: flex !important;
-                    }
-                    .banner-bienvenida {
-                        flex-direction: column !important;
-                        align-items: flex-start !important;
-                        gap: 16px !important;
-                    }
-                    .banner-stats {
-                        width: auto !important;
-                        justify-content: flex-start !important;
-                    }
-                }
-                @media (max-width: 640px) {
-                    .grid-principal {
-                        grid-template-columns: 1fr !important;
-                    }
-                    .cita-item {
-                        flex-direction: column !important;
-                        align-items: flex-start !important;
-                        gap: 12px !important;
-                    }
-                }
-            `}</style>
-
-            {menuAbierto && (
-                <div
-                    onClick={() => setMenuAbierto(false)}
-                    style={{ position: "fixed", top: 0, left: 0, width: "100vw", height: "100vh", background: "rgba(0,0,0,0.2)", zIndex: 15 }}
-                />
-            )}
 
             {/* Sidebar */}
-            <aside style={{ width: 240, background: "white", borderRight: "1px solid #e5e7eb", display: "flex", flexDirection: "column", padding: "24px 0", position: "fixed", height: "100vh", zIndex: 20 }}>
-                <div style={{ padding: "0 20px 24px", borderBottom: "1px solid #e5e7eb", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                    <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-                        <img src="https://static.vecteezy.com/system/resources/thumbnails/011/653/087/small_2x/psychology-3d-render-icon-illustration-png.png" style={{ height: 36, width: "auto" }} />
-                        <span style={{ fontFamily: "'Poppins', sans-serif", fontWeight: 600, fontSize: "1rem", color: "#1a2e2c" }}>Mente en Calma</span>
-                    </div>
-                    <button className="btn-hamburguesa" onClick={() => setMenuAbierto(false)} style={{ display: "none", background: "none", border: "none", fontSize: "1.2rem", cursor: "pointer", color: "#6b7280" }}>✕</button>
-                </div>
 
-                <nav style={{ flex: 1, padding: "16px 12px", display: "flex", flexDirection: "column", gap: 4 }}>
-                    {[
-                        { icon: <LuLayoutDashboard size={18} />, label: "Dashboard", active: true },
-                        { icon: <LuCalendarDays size={18} />, label: "Mis Citas" },
-                        { icon: <LuMessageSquare size={18} />, label: "Mensajes" },
-                        { icon: <LuClipboardList size={18} />, label: "Historial Médico" },
-                        { icon: <LuSettings size={18} />, label: "Configuración" },
-                    ].map(item => (
-                        <button
-                            key={item.label}
-                            style={{
-                                display: "flex",
-                                alignItems: "center",
-                                gap: 10,
-                                padding: "10px 12px",
-                                borderRadius: 10,
-                                border: "none",
-                                background: item.active ? "#f0f9f7" : "transparent",
-                                color: item.active ? "#2a5f5a" : "#6b7280",
-                                fontFamily: "'Montserrat', sans-serif",
-                                fontWeight: item.active ? 600 : 400,
-                                fontSize: "0.88rem",
-                                cursor: "pointer",
-                                textAlign: "left"
-                            }}
-                        >
-                            <div style={{ display: "flex", alignItems: "center" }}>
-                                {item.icon}
-                            </div>
-                            {item.label}
-                        </button>
-                    ))}
-                </nav>
-
-                {/* Usuario */}
-                <div
-                    onClick={() => router.push("/dashboard/perfil")}
-                    style={{ padding: "16px 20px", borderTop: "1px solid #e5e7eb", display: "flex", alignItems: "center", gap: 10, cursor: "pointer", transition: "background 0.2s ease" }}
-                    onMouseEnter={e => e.currentTarget.style.background = "#f9fafb"}
-                    onMouseLeave={e => e.currentTarget.style.background = "transparent"}
-                >
-                    {paciente?.fotoUrl ? (
-                        <img src={paciente.fotoUrl} alt="foto"
-                            style={{ width: 36, height: 36, borderRadius: "50%", objectFit: "cover", flexShrink: 0, border: "2px solid #e5e7eb" }} />
-                    ) : (
-                        <div style={{ width: 36, height: 36, borderRadius: "50%", background: "linear-gradient(135deg, #6b9e9a, #2d6560)", display: "flex", alignItems: "center", justifyContent: "center", color: "white", fontWeight: 700, fontSize: "0.9rem", flexShrink: 0 }}>
-                            {paciente?.nombre?.[0]?.toUpperCase() ?? "P"}
-                        </div>
-                    )}
-                    <div style={{ flex: 1, minWidth: 0 }}>
-                        <p style={{ margin: 0, fontSize: "0.82rem", fontWeight: 600, color: "#1a2e2c", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{paciente?.nombre}</p>
-                        <p style={{ margin: 0, fontSize: "0.72rem", color: "#4a8a85", textTransform: "uppercase", letterSpacing: "0.05em" }}>Paciente</p>
-                    </div>
-                </div>
-            </aside>
 
             {/* Main */}
-            <main style={{ marginLeft: 240, flex: 1, minWidth: 0 }}>
+            <div>
 
                 {/* Header */}
                 <div style={{ background: "white", borderBottom: "1px solid #e5e7eb", padding: "16px 32px", display: "flex", justifyContent: "space-between", alignItems: "center", position: "sticky", top: 0, zIndex: 10, gap: 12 }}>
                     <div style={{ display: "flex", alignItems: "center", gap: 14 }}>
-                        <button className="btn-hamburguesa" onClick={() => setMenuAbierto(true)} style={{ display: "none", background: "#f3f4f6", border: "1px solid #e5e7eb", padding: "8px 12px", borderRadius: 8, fontSize: "1.1rem", cursor: "pointer", color: "#374151" }}>
-                            <LuMenu size={20} />
-                        </button>
+
                         <h1 style={{ fontFamily: "'Poppins', sans-serif", fontWeight: 700, fontSize: "1.3rem", color: "#1a2e2c", margin: 0 }}>Panel del Paciente</h1>
                     </div>
                     <div style={{ display: "flex", gap: 12, flexWrap: "wrap" }}>
@@ -385,7 +272,7 @@ export default function DashboardPaciente() {
                         </div>
                     </div>
                 </div>
-            </main>
+            </div>
         </div>
     );
 }
