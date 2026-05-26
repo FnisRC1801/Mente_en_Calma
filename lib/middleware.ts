@@ -4,7 +4,6 @@ export async function middleware(request: NextRequest) {
     const session = request.cookies.get("session");
     const { pathname } = request.nextUrl;
 
-    // ── Sin sesión ──────────────────────────────────────────────────
     if (!session) {
         if (
             pathname.startsWith("/dashboard") ||
@@ -16,7 +15,6 @@ export async function middleware(request: NextRequest) {
         return NextResponse.next();
     }
 
-    // ── Con sesión: verificar rol ───────────────────────────────────
     try {
         const verifyRes = await fetch(
             new URL("/api/auth/verify-role", request.url).toString(),
@@ -32,15 +30,18 @@ export async function middleware(request: NextRequest) {
             return res;
         }
 
-        const { role } = await verifyRes.json();
+        const { role, hasDoc } = await verifyRes.json();
 
-        // ── Ya tiene sesión e intenta ir a login/registro ───────────
         if (
             pathname === "/login" ||
             pathname === "/login-psico" ||
             pathname === "/singup" ||
             pathname === "/singup-psico"
         ) {
+            // Usuario Google nuevo sin doc — dejarlo llenar el formulario
+            if (!hasDoc && (pathname === "/singup" || pathname === "/singup-psico")) {
+                return NextResponse.next();
+            }
             if (role === "superusuario")
                 return NextResponse.redirect(new URL("/admin", request.url));
             if (role === "psicologo")
@@ -48,7 +49,6 @@ export async function middleware(request: NextRequest) {
             return NextResponse.redirect(new URL("/dashboard", request.url));
         }
 
-        // ── Protección por rol ──────────────────────────────────────
         if (pathname.startsWith("/admin") && role !== "superusuario") {
             return NextResponse.redirect(new URL("/dashboard", request.url));
         }

@@ -163,9 +163,9 @@ export function useSignup() {
         setError("");
 
         // ── Validaciones comunes ──────────────────────────────
-        if (!name.trim())  { setError("Ingresa tu nombre completo."); return; }
+        if (!name.trim()) { setError("Ingresa tu nombre completo."); return; }
         if (!email.trim()) { setError("Ingresa tu correo."); return; }
-        if (!sexo)         { setError("Selecciona tu sexo."); return; }
+        if (!sexo) { setError("Selecciona tu sexo."); return; }
 
         if (tipo === "paciente") {
             if (!diaNac || !mesNac || !anioNac) { setError("Selecciona tu fecha de nacimiento completa."); return; }
@@ -173,23 +173,24 @@ export function useSignup() {
             if (edadPaciente < 18) { setError("Debes ser mayor de 18 años para registrarte."); return; }
         }
 
-        if (!modoGoogle && pwdError)              { setError(pwdError); return; }
-        if (!modoGoogle && !password)             { setError("Ingresa una contraseña."); return; }
-        if (!modoGoogle && password !== confirm)  { setError("Las contraseñas no coinciden."); return; }
-        if (!aceptaTerminos)                      { setError("Acepta los términos y condiciones."); return; }
+        if (!modoGoogle && pwdError) { setError(pwdError); return; }
+        if (!modoGoogle && !password) { setError("Ingresa una contraseña."); return; }
+        if (!modoGoogle && password !== confirm) { setError("Las contraseñas no coinciden."); return; }
+        if (!aceptaTerminos) { setError("Acepta los términos y condiciones."); return; }
 
         if (tipo === "doctor") {
-            if (!telefono)                                         { setError("Ingresa tu teléfono."); return; }
-            if (!especialidad)                                     { setError("Selecciona tu especialidad."); return; }
+            if (!telefono) { setError("Ingresa tu teléfono."); return; }
+            if (!especialidad) { setError("Selecciona tu especialidad."); return; }
             if (especialidad === "otra" && !otraEspecialidad.trim()) { setError("Escribe el nombre de tu especialidad."); return; }
-            if (!gradoEstudios)                                    { setError("Selecciona tu grado de estudios."); return; }
-            if (!consultorio.trim())                               { setError("Ingresa tu consultorio."); return; }
-            if (!cedulaFile)                                       { setError("Adjunta tu cédula profesional."); return; }
+            if (!gradoEstudios) { setError("Selecciona tu grado de estudios."); return; }
+            if (!consultorio.trim()) { setError("Ingresa tu consultorio."); return; }
+            if (!cedulaFile) { setError("Adjunta tu cédula profesional."); return; }
         }
 
         setLoading(true);
         try {
             let uid: string;
+
 
             if (modoGoogle && googleUser) {
                 // ── Registro con Google ───────────────────────
@@ -200,7 +201,7 @@ export function useSignup() {
                 // ✅ Verificar email duplicado en AMBAS colecciones
                 const [snapPac, snapDoc] = await Promise.all([
                     getDocs(query(collection(db, "pacientes"), where("email", "==", email.trim()))),
-                    getDocs(query(collection(db, "doctores"),  where("email", "==", email.trim()))),
+                    getDocs(query(collection(db, "doctores"), where("email", "==", email.trim()))),
                 ]);
 
                 if (!snapPac.empty || !snapDoc.empty) {
@@ -279,7 +280,14 @@ export function useSignup() {
                 headers: { "Content-Type": "application/json" },
             });
 
-            setEnviado(true);
+            if (modoGoogle) {
+                const roleRes = await fetch("/api/auth/verify-role");
+                const { role } = await roleRes.json();
+                if (role === "psicologo") router.push("/dashboard-psico");
+                else router.push("/dashboard");
+            } else {
+                setEnviado(true);
+            }
         } catch (e: any) {
             if (e.code === "auth/email-already-in-use") setError("Este correo ya está registrado.");
             else setError(e.message ?? "Error al crear la cuenta.");

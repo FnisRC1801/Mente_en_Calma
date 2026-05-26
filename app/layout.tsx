@@ -16,14 +16,24 @@ export default function RootLayout({
   const [loadingAuth, setLoadingAuth] = useState(true);
 
   useEffect(() => {
-    const unsubscribe = auth.onAuthStateChanged((user) => {
+    const unsubscribe = auth.onAuthStateChanged(async (user) => {
       const esRutaProtegida = pathname.startsWith("/dashboard") || pathname.startsWith("/dashboard-psico");
       const esRutaPublica = pathname.startsWith("/login") || pathname.startsWith("/singup");
 
       if (!user && esRutaProtegida) {
         router.push("/login");
       } else if (user && esRutaPublica) {
-        router.push("/dashboard");
+        try {
+          const roleRes = await fetch("/api/auth/verify-role");
+          const { hasDoc, role } = await roleRes.json();
+          if (hasDoc) {
+            if (role === "psicologo") router.push("/dashboard-psico");
+            else router.push("/dashboard");
+          }
+          // Si hasDoc es false = Google nuevo, se queda en /singup
+        } catch {
+          router.push("/dashboard");
+        }
       }
 
       setLoadingAuth(false);
@@ -37,11 +47,11 @@ export default function RootLayout({
       <body>
         <ThemeProvider attribute="class" defaultTheme="light" enableSystem={false}>
           {loadingAuth ? (
-            <div style={{ 
-              minHeight: "100vh", 
-              display: "flex", 
-              alignItems: "center", 
-              justifyContent: "center", 
+            <div style={{
+              minHeight: "100vh",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
               background: "#f8fafb",
               flexDirection: "column",
               gap: "14px"

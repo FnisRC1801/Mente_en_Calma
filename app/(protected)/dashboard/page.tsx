@@ -45,9 +45,9 @@ export default function DashboardPaciente() {
     const [loading, setLoading] = useState(true);
     const [mesActual] = useState(new Date());
     const [showNotif, setShowNotif] = useState(false);
-    const [config, setConfig] = useState<{ notif_citas: boolean; notif_mensajes: boolean } | null>(null);
+    const [config, setConfig] = useState<{ notif_citas: boolean; notif_mensajes: boolean } | null>(null); // 👈 aquí
     const [notifVistas, setNotifVistas] = useState(false);
-    
+
     useEffect(() => {
         async function cargarDatos() {
             const user = auth.currentUser;
@@ -57,6 +57,9 @@ export default function DashboardPaciente() {
                 const data = docSnap.data();
                 setPaciente(data as Paciente);
                 setConfig(data.config ?? { notif_citas: true, notif_mensajes: true });
+            } else {
+                // Cuenta Google recién creada, usa displayName como fallback
+                setPaciente({ nombre: user.displayName ?? "Usuario", email: user.email ?? "", sexo: "" });
             }
             const q = query(collection(db, "citas"), where("pacienteId", "==", user.uid));
             const snap = await getDocs(q);
@@ -72,7 +75,7 @@ export default function DashboardPaciente() {
         router.push("/login");
     }
 
-    // 📅 FILTRADO CORRECTO: Solo citas futuras o de hoy con estado ACEPTADA o PENDIENTE
+    // Solo citas futuras o de hoy
     const hoyStr = new Date().toISOString().split("T")[0];
     const citasProximas = citas.filter(c =>
         (c.estado === "ACEPTADA" || c.estado === "PENDIENTE") && c.fecha >= hoyStr
@@ -121,9 +124,10 @@ export default function DashboardPaciente() {
             `}</style>
 
             {/* Header */}
-            <div style={{ background: "white", borderBottom: "1px solid #e5e7eb", padding: "14px 32px", display: "flex", justifyContent: "space-between", alignItems: "center", position: "sticky", top: 0, zIndex: 10, gap: 12 }}>
+            {/* Header */}
+            <div style={{ background: "white", borderBottom: "1px solid #e5e7eb", padding: "21px 32px", display: "flex", justifyContent: "space-between", alignItems: "center", position: "sticky", top: 0, zIndex: 10, gap: 12 }}>
                 <h1 style={{ fontFamily: "'Poppins', sans-serif", fontWeight: 700, fontSize: "1.2rem", color: "#1a2e2c", margin: 0 }}>
-                    Panel del Paciente
+
                 </h1>
                 <div style={{ display: "flex", gap: 10, alignItems: "center" }}>
 
@@ -139,6 +143,7 @@ export default function DashboardPaciente() {
                             )}
                         </button>
 
+                        {/* Dropdown notificaciones */}
                         {showNotif && (
                             <div style={{ position: "absolute", top: 46, right: 0, width: 300, background: "white", borderRadius: 14, border: "1px solid #e5e7eb", boxShadow: "0 8px 32px rgba(0,0,0,0.12)", zIndex: 50, animation: "fadeIn 0.2s ease", overflow: "hidden" }}>
                                 <div style={{ padding: "14px 16px", borderBottom: "1px solid #f3f4f6", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
@@ -171,6 +176,10 @@ export default function DashboardPaciente() {
                         )}
                     </div>
 
+                    <button onClick={handleCerrarSesion}
+                        style={{ padding: "8px 16px", borderRadius: 10, border: "1px solid #d1d5db", background: "white", color: "#374151", fontSize: "0.82rem", cursor: "pointer", fontFamily: "'Montserrat', sans-serif" }}>
+                        Cerrar sesión
+                    </button>
                     <button onClick={() => router.push("/dashboard/nueva-cita")}
                         style={{ padding: "8px 16px", borderRadius: 10, border: "none", background: "linear-gradient(135deg, #6b9e9a, #2d6560)", color: "white", fontSize: "0.82rem", cursor: "pointer", fontFamily: "'Montserrat', sans-serif", fontWeight: 600 }}>
                         + Agendar Cita
@@ -226,7 +235,7 @@ export default function DashboardPaciente() {
                             <div style={{ textAlign: "center", padding: "32px 0", color: "#9ca3af" }}>
                                 <LuCalendar size={40} color="#e5e7eb" style={{ margin: "0 auto 8px" }} />
                                 <p style={{ margin: 0, fontSize: "0.88rem", fontWeight: 500 }}>No tienes citas próximas</p>
-                                <p style={{ margin: "4px 0 16px", fontSize: "0.78rem" }}>Agenda una cita con un specialist</p>
+                                <p style={{ margin: "4px 0 16px", fontSize: "0.78rem" }}>Agenda una cita con un especialista</p>
                                 <button onClick={() => router.push("/dashboard/nueva-cita")}
                                     style={{ padding: "8px 16px", borderRadius: 10, border: "none", background: "linear-gradient(135deg, #6b9e9a, #2d6560)", color: "white", fontSize: "0.82rem", fontWeight: 600, cursor: "pointer" }}>
                                     + Agendar ahora
@@ -272,7 +281,7 @@ export default function DashboardPaciente() {
                         )}
                     </div>
 
-                    {/* Calendario Corregido */}
+                    {/* Calendario */}
                     <div style={{ background: "white", borderRadius: 16, padding: "20px 24px", border: "1px solid #e5e7eb" }}>
                         <h3 style={{ fontFamily: "'Poppins', sans-serif", fontWeight: 600, fontSize: "1rem", color: "#1a2e2c", margin: "0 0 16px", display: "flex", alignItems: "center", gap: 8 }}>
                             <LuCalendarDays size={18} color="#4a8a85" /> {meses[mesActual.getMonth()]} {mesActual.getFullYear()}
@@ -285,17 +294,11 @@ export default function DashboardPaciente() {
                             {Array.from({ length: daysInMonth }).map((_, i) => {
                                 const dia = i + 1;
                                 const esHoy = dia === hoy && mesActual.getMonth() === new Date().getMonth();
-                                
-                                // 🌟 SOLUCIÓN: Validamos de forma estricta que la cita pertenezca al día, mes y año desplegados en pantalla
                                 const tieneCita = citasProximas.some(c => {
-                                    const [cAnio, cMes, cDia] = c.fecha.split("-").map(Number);
-                                    return (
-                                        cDia === dia &&
-                                        (cMes - 1) === mesActual.getMonth() &&
-                                        cAnio === mesActual.getFullYear()
-                                    );
+                                    if (c.estado !== "ACEPTADA") return false;
+                                    const f = new Date(c.fecha + "T00:00:00");
+                                    return f.getDate() === dia && f.getMonth() === mesActual.getMonth() && f.getFullYear() === mesActual.getFullYear();
                                 });
-
                                 return (
                                     <div key={dia} style={{ textAlign: "center", padding: "5px 2px", borderRadius: 7, fontSize: "0.78rem", background: esHoy ? "#2d6560" : "transparent", color: esHoy ? "white" : "#374151", fontWeight: esHoy ? 700 : 400, position: "relative" }}>
                                         {dia}
@@ -305,7 +308,6 @@ export default function DashboardPaciente() {
                             })}
                         </div>
 
-                        {/* Listado inferior del calendario */}
                         <div style={{ marginTop: 14, borderTop: "1px solid #e5e7eb", paddingTop: 14, display: "flex", flexDirection: "column", gap: 8 }}>
                             {citasProximas.length === 0 ? (
                                 <p style={{ fontSize: "0.75rem", color: "#9ca3af", textAlign: "center", margin: 0 }}>Sin citas este mes</p>
@@ -322,7 +324,6 @@ export default function DashboardPaciente() {
                             )}
                         </div>
                     </div>
-
                 </div>
             </div>
         </div>

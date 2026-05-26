@@ -12,18 +12,18 @@ export async function GET(request: NextRequest) {
         const decoded = await adminAuth.verifyIdToken(session);
         const uid = decoded.uid;
 
-        // Buscar rol en Firestore
         const doctorSnap = await adminDb.collection("doctores").doc(uid).get();
         if (doctorSnap.exists) {
-            return NextResponse.json({ role: "psicologo" });
+            return NextResponse.json({ role: "psicologo", hasDoc: true });
         }
 
         const pacienteSnap = await adminDb.collection("pacientes").doc(uid).get();
         if (pacienteSnap.exists) {
-            return NextResponse.json({ role: "paciente" });
+            return NextResponse.json({ role: "paciente", hasDoc: true });
         }
 
-        return NextResponse.json({ role: "paciente" });
+        // Usuario autenticado con Google pero sin doc todavía
+        return NextResponse.json({ role: "paciente", hasDoc: false });
 
     } catch {
         return NextResponse.json({ error: "Sesión inválida" }, { status: 401 });
