@@ -3,8 +3,7 @@
 import { useEffect, useState, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { auth, db } from "@/lib/firebase-client";
-import { doc, getDoc, updateDoc, arrayUnion, arrayRemove } from "firebase/firestore";
-import { updatePassword, updateEmail, reauthenticateWithCredential, EmailAuthProvider } from "firebase/auth";
+import { doc, getDoc, updateDoc, arrayUnion, arrayRemove, getDocs, collection, addDoc } from "firebase/firestore"; import { updatePassword, updateEmail, reauthenticateWithCredential, EmailAuthProvider } from "firebase/auth";
 import {
     LuUser, LuMail, LuShield, LuPencil, LuCheck, LuX,
     LuLock, LuCamera, LuPlus, LuTrash2, LuFileText,
@@ -15,20 +14,20 @@ import {
 import { FaGoogle } from "react-icons/fa";
 
 const ICONOS_DISPONIBLES = [
-    { id: "LuBrain",      icon: LuBrain,      label: "Cerebro"     },
-    { id: "LuHeart",      icon: LuHeart,      label: "Corazon"     },
-    { id: "LuHeartPulse", icon: LuHeartPulse, label: "Pulso"       },
-    { id: "LuSparkles",   icon: LuSparkles,   label: "Duelo"       },
-    { id: "LuBaby",       icon: LuBaby,       label: "Infantil"    },
-    { id: "LuSmile",      icon: LuSmile,      label: "Bienestar"   },
-    { id: "LuActivity",   icon: LuActivity,   label: "Actividad"   },
-    { id: "LuBookOpen",   icon: LuBookOpen,   label: "Educativa"   },
-    { id: "LuUsers",      icon: LuUsers,      label: "Familiar"    },
-    { id: "LuStar",       icon: LuStar,       label: "Especial"    },
-    { id: "LuZap",        icon: LuZap,        label: "Crisis"      },
-    { id: "LuLeaf",       icon: LuLeaf,       label: "Mindfulness" },
-    { id: "LuSun",        icon: LuSun,        label: "Positiva"    },
-    { id: "LuMoon",       icon: LuMoon,       label: "Sueno"       },
+    { id: "LuBrain", icon: LuBrain, label: "Cerebro" },
+    { id: "LuHeart", icon: LuHeart, label: "Corazon" },
+    { id: "LuHeartPulse", icon: LuHeartPulse, label: "Pulso" },
+    { id: "LuSparkles", icon: LuSparkles, label: "Duelo" },
+    { id: "LuBaby", icon: LuBaby, label: "Infantil" },
+    { id: "LuSmile", icon: LuSmile, label: "Bienestar" },
+    { id: "LuActivity", icon: LuActivity, label: "Actividad" },
+    { id: "LuBookOpen", icon: LuBookOpen, label: "Educativa" },
+    { id: "LuUsers", icon: LuUsers, label: "Familiar" },
+    { id: "LuStar", icon: LuStar, label: "Especial" },
+    { id: "LuZap", icon: LuZap, label: "Crisis" },
+    { id: "LuLeaf", icon: LuLeaf, label: "Mindfulness" },
+    { id: "LuSun", icon: LuSun, label: "Positiva" },
+    { id: "LuMoon", icon: LuMoon, label: "Sueno" },
 ];
 
 const ICONO_DEFAULT = "LuBrain";
@@ -70,41 +69,45 @@ interface Doctor {
 
 export default function PerfilDoctor() {
     const router = useRouter();
-    const fotoInputRef   = useRef<HTMLInputElement>(null);
-    const docInputRef    = useRef<HTMLInputElement>(null);  // para documentos nuevos
+    const fotoInputRef = useRef<HTMLInputElement>(null);
+    const docInputRef = useRef<HTMLInputElement>(null);  // para documentos nuevos
     const cedulaInputRef = useRef<HTMLInputElement>(null);  // para subir cedula
+    const espSelectRef = useRef<HTMLSelectElement>(null);
 
-    const [doctor,    setDoctor]    = useState<Doctor | null>(null);
-    const [loading,   setLoading]   = useState(true);
-    const [esGoogle,  setEsGoogle]  = useState(false);
-    const [error,     setError]     = useState("");
-    const [exito,     setExito]     = useState("");
+    const [doctor, setDoctor] = useState<Doctor | null>(null);
+    const [loading, setLoading] = useState(true);
+    const [esGoogle, setEsGoogle] = useState(false);
+    const [error, setError] = useState("");
+    const [exito, setExito] = useState("");
     const [guardando, setGuardando] = useState(false);
 
-    const [editandoNombre,      setEditandoNombre]      = useState(false);
-    const [nuevoNombre,         setNuevoNombre]         = useState("");
-    const [editandoTelefono,    setEditandoTelefono]    = useState(false);
-    const [nuevoTelefono,       setNuevoTelefono]       = useState("");
+    const [editandoNombre, setEditandoNombre] = useState(false);
+    const [nuevoNombre, setNuevoNombre] = useState("");
+    const [editandoTelefono, setEditandoTelefono] = useState(false);
+    const [nuevoTelefono, setNuevoTelefono] = useState("");
     const [editandoConsultorio, setEditandoConsultorio] = useState(false);
-    const [nuevoConsultorio,    setNuevoConsultorio]    = useState("");
+    const [nuevoConsultorio, setNuevoConsultorio] = useState("");
 
-    const [showPassword,    setShowPassword]    = useState(false);
-    const [passwordActual,  setPasswordActual]  = useState("");
-    const [passwordNueva,   setPasswordNueva]   = useState("");
+    const [showPassword, setShowPassword] = useState(false);
+    const [passwordActual, setPasswordActual] = useState("");
+    const [passwordNueva, setPasswordNueva] = useState("");
     const [passwordConfirm, setPasswordConfirm] = useState("");
-    const [showEmail,       setShowEmail]       = useState(false);
-    const [nuevoEmail,      setNuevoEmail]      = useState("");
-    const [passwordEmail,   setPasswordEmail]   = useState("");
+    const [showEmail, setShowEmail] = useState(false);
+    const [nuevoEmail, setNuevoEmail] = useState("");
+    const [passwordEmail, setPasswordEmail] = useState("");
 
-    const [showAgregarEsp,   setShowAgregarEsp]   = useState(false);
-    const [nuevaEspNombre,   setNuevaEspNombre]   = useState("");
-    const [nuevaEspDesc,     setNuevaEspDesc]     = useState("");
-    const [nuevaEspIcono,    setNuevaEspIcono]    = useState(ICONO_DEFAULT);
+    const [showAgregarEsp, setShowAgregarEsp] = useState(false);
+    const [modoEsp, setModoEsp] = useState<"existente" | "nueva">("existente");
+    const [nuevaEspNombre, setNuevaEspNombre] = useState("");
+    const [espSeleccionada, setEspSeleccionada] = useState("");
+    const [nuevaEspDesc, setNuevaEspDesc] = useState("");
+    const [nuevaEspIcono, setNuevaEspIcono] = useState(ICONO_DEFAULT);
     const [nuevaEspDirigido, setNuevaEspDirigido] = useState<"menores" | "adultos" | "ambos">("ambos");
+    const [especialidadesColeccion, setEspecialidadesColeccion] = useState<string[]>([]);
 
-    const [subiendoDoc,  setSubiendoDoc]  = useState(false);
-    const [nombreDoc,    setNombreDoc]    = useState("");
-    const [tipoDoc,      setTipoDoc]      = useState("Cedula");
+    const [subiendoDoc, setSubiendoDoc] = useState(false);
+    const [nombreDoc, setNombreDoc] = useState("");
+    const [tipoDoc, setTipoDoc] = useState("Cedula");
     const [subiendoFoto, setSubiendoFoto] = useState(false);
 
     useEffect(() => {
@@ -114,6 +117,8 @@ export default function PerfilDoctor() {
             setEsGoogle(user.providerData.some(p => p.providerId === "google.com"));
             const snap = await getDoc(doc(db, "doctores", user.uid));
             if (snap.exists()) setDoctor(snap.data() as Doctor);
+            const espSnap = await getDocs(collection(db, "especialidades"));
+            setEspecialidadesColeccion(espSnap.docs.map(d => (d.data() as any).nombre as string).sort());
             setLoading(false);
         }
         cargar();
@@ -134,7 +139,7 @@ export default function PerfilDoctor() {
             const formData = new FormData();
             formData.append("file", file);
             formData.append("tipo", "perfil");
-            const res  = await fetch("/api/upload", { method: "POST", body: formData });
+            const res = await fetch("/api/upload", { method: "POST", body: formData });
             const data = await res.json();
             if (!data.ok) throw new Error(data.message);
             await updateDoc(doc(db, "doctores", auth.currentUser!.uid), { fotoUrl: data.data.url });
@@ -182,16 +187,33 @@ export default function PerfilDoctor() {
     }
 
     async function handleAgregarEspecialidad() {
-        if (!nuevaEspNombre.trim()) { setError("Escribe el nombre de la especialidad."); return; }
+        const nombre = modoEsp === "existente"
+            ? espSeleccionada.trim()
+            : nuevaEspNombre.trim();
+        if (!nombre) { setError("Selecciona o escribe una especialidad."); return; }
         const nueva: Especialidad = {
-            nombre:      nuevaEspNombre.trim(),
-            descripcion: nuevaEspDesc.trim() || undefined,
-            icono:       nuevaEspIcono,
-            dirigidoA:   nuevaEspDirigido,
+            nombre,
+            descripcion: modoEsp === "nueva" ? (nuevaEspDesc.trim() || undefined) : undefined,
+            icono: modoEsp === "nueva" ? nuevaEspIcono : ICONO_DEFAULT,
+            dirigidoA: modoEsp === "nueva" ? nuevaEspDirigido : "ambos",
         };
         try {
             await updateDoc(doc(db, "doctores", auth.currentUser!.uid), { especialidades: arrayUnion(nueva) });
             setDoctor(prev => prev ? { ...prev, especialidades: [...(prev.especialidades ?? []), nueva] } : null);
+
+            // Si es nueva, agregar también a la colección
+            if (modoEsp === "nueva") {
+                const yaExiste = especialidadesColeccion.includes(nombre);
+                if (!yaExiste) {
+                    await addDoc(collection(db, "especialidades"), {
+                        nombre,
+                        descripcion: nuevaEspDesc.trim() || "",
+                        createdAt: new Date(),
+                    });
+                    setEspecialidadesColeccion(prev => [...prev, nombre].sort());
+                }
+            }
+
             setNuevaEspNombre(""); setNuevaEspDesc(""); setNuevaEspIcono(ICONO_DEFAULT); setNuevaEspDirigido("ambos");
             setShowAgregarEsp(false);
             mostrarExito("Especialidad agregada.");
@@ -216,14 +238,14 @@ export default function PerfilDoctor() {
             const formData = new FormData();
             formData.append("file", file);
             formData.append("tipo", "documento");
-            const res  = await fetch("/api/upload", { method: "POST", body: formData });
+            const res = await fetch("/api/upload", { method: "POST", body: formData });
             const data = await res.json();
             if (!data.ok) throw new Error(data.message);
             const nuevoDoc: Documento = {
                 nombre: nombreDoc.trim(),
-                url:    data.data.url,
-                tipo:   tipoDoc,
-                fecha:  new Date().toLocaleDateString("es-MX", { day: "numeric", month: "long", year: "numeric" }),
+                url: data.data.url,
+                tipo: tipoDoc,
+                fecha: new Date().toLocaleDateString("es-MX", { day: "numeric", month: "long", year: "numeric" }),
             };
             await updateDoc(doc(db, "doctores", auth.currentUser!.uid), { documentos: arrayUnion(nuevoDoc) });
             setDoctor(prev => prev ? { ...prev, documentos: [...(prev.documentos ?? []), nuevoDoc] } : null);
@@ -282,15 +304,15 @@ export default function PerfilDoctor() {
     );
 
     const especialidades = doctor?.especialidades ?? [];
-    const documentos     = doctor?.documentos     ?? [];
+    const documentos = doctor?.documentos ?? [];
 
     // Soporta tanto cedulaUrl (campo viejo) como cedulaArchivo (campo nuevo)
     const urlCedula = doctor?.cedulaArchivo ?? doctor?.cedulaUrl;
     const cedulaPrincipal = urlCedula?.startsWith("https://") ? {
         nombre: doctor?.cedulaArchivoNombre ?? "Cedula profesional",
-        url:    urlCedula,
-        tipo:   "Cedula",
-        fecha:  "Al registrarse",
+        url: urlCedula,
+        tipo: "Cedula",
+        fecha: "Al registrarse",
     } : null;
 
     return (
@@ -350,8 +372,9 @@ export default function PerfilDoctor() {
                     <CampoEditable label="Consultorio" valor={doctor?.consultorio ?? "No registrado"} editando={editandoConsultorio} nuevoValor={nuevoConsultorio} onChange={setNuevoConsultorio} onEditar={() => { setNuevoConsultorio(doctor?.consultorio ?? ""); setEditandoConsultorio(true); }} onGuardar={handleGuardarConsultorio} onCancelar={() => setEditandoConsultorio(false)} inputStyle={inputStyle} />
                     <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
                         {[
-                            { label: "Sexo",           valor: doctor?.sexo === "M" ? "Masculino" : doctor?.sexo === "F" ? "Femenino" : "-" },
+                            { label: "Sexo", valor: doctor?.sexo === "M" ? "Masculino" : doctor?.sexo === "F" ? "Femenino" : "-" },
                             { label: "Grado estudios", valor: doctor?.gradoEstudios ?? "-" },
+                            
                         ].map(item => (
                             <div key={item.label} style={{ padding: "12px 14px", background: "#f9fafb", borderRadius: 10 }}>
                                 <p style={{ ...labelStyle, marginBottom: 4 }}>{item.label}</p>
@@ -368,10 +391,16 @@ export default function PerfilDoctor() {
                     <h2 style={{ fontFamily: "'Poppins', sans-serif", fontWeight: 600, fontSize: "1rem", color: "#1a2e2c", margin: 0, display: "flex", alignItems: "center", gap: 8 }}>
                         <LuBrain size={18} color="#4a8a85" /> Especialidades
                     </h2>
-                    <button onClick={() => setShowAgregarEsp(!showAgregarEsp)}
-                        style={{ display: "flex", alignItems: "center", gap: 6, padding: "7px 14px", borderRadius: 8, border: "none", background: "#f0f9f7", color: "#2a5f5a", fontSize: "0.8rem", fontWeight: 600, cursor: "pointer", fontFamily: "'Montserrat', sans-serif" }}>
-                        <LuPlus size={14} /> Agregar
-                    </button>
+                    <div style={{ display: "flex", gap: 6 }}>
+                        <button onClick={() => { setModoEsp("existente"); setShowAgregarEsp(true); setNuevaEspNombre(""); }}
+                            style={{ display: "flex", alignItems: "center", gap: 5, padding: "7px 12px", borderRadius: 8, border: "none", background: "#f0f9f7", color: "#2a5f5a", fontSize: "0.78rem", fontWeight: 600, cursor: "pointer", fontFamily: "'Montserrat', sans-serif" }}>
+                            <LuPlus size={13} /> De la lista
+                        </button>
+                        <button onClick={() => { setModoEsp("nueva"); setShowAgregarEsp(true); setNuevaEspNombre(""); }}
+                            style={{ display: "flex", alignItems: "center", gap: 5, padding: "7px 12px", borderRadius: 8, border: "1px solid #e5e7eb", background: "white", color: "#6b7280", fontSize: "0.78rem", fontWeight: 600, cursor: "pointer", fontFamily: "'Montserrat', sans-serif" }}>
+                            <LuPlus size={13} /> Nueva
+                        </button>
+                    </div>
                 </div>
 
                 <div style={{ display: "flex", alignItems: "center", gap: 12, padding: "12px 14px", background: "#f0f9f7", borderRadius: 10, border: "1px solid #b2ddd7", marginBottom: 8 }}>
@@ -408,40 +437,59 @@ export default function PerfilDoctor() {
 
                 {showAgregarEsp && (
                     <div style={{ background: "#f9fafb", borderRadius: 12, padding: "16px", border: "1px solid #e5e7eb", marginTop: 12, display: "flex", flexDirection: "column", gap: 14 }}>
-                        <div>
-                            <label style={labelStyle}>Nombre de la especialidad</label>
-                            <input value={nuevaEspNombre} onChange={e => setNuevaEspNombre(e.target.value)} placeholder="Ej. Terapia Cognitivo Conductual" style={inputStyle} />
-                        </div>
-                        {nuevaEspNombre.trim().length > 0 && (
-                            <div style={{ animation: "fadeIn 0.2s ease" }}>
-                                <label style={labelStyle}>Descripcion (opcional)</label>
-                                <textarea value={nuevaEspDesc} onChange={e => setNuevaEspDesc(e.target.value)} placeholder="Describe brevemente en que consiste..." rows={2} style={{ ...inputStyle, resize: "none", lineHeight: 1.5 }} />
+
+                        {modoEsp === "existente" ? (
+                            <div>
+                                <label style={labelStyle}>Seleccionar especialidad de la lista</label>
+                                <select
+                                    value={espSeleccionada}
+                                    onChange={e => setEspSeleccionada(e.target.value)}
+                                    style={{ ...inputStyle, appearance: "none" as any }}>
+                                    <option value="">-- Selecciona una especialidad --</option>
+                                    {especialidadesColeccion
+                                        .filter(e => e !== doctor?.especialidad && !especialidades.find(x => x.nombre === e))
+                                        .map(e => <option key={e} value={e}>{e}</option>)}
+                                </select>
                             </div>
+                        ) : (
+                            <>
+                                <div>
+                                    <label style={labelStyle}>Nombre de la especialidad</label>
+                                    <input value={nuevaEspNombre} onChange={e => setNuevaEspNombre(e.target.value)} placeholder="Ej. Terapia Cognitivo Conductual" style={inputStyle} />
+                                </div>
+                                {nuevaEspNombre.trim().length > 0 && (
+                                    <div style={{ animation: "fadeIn 0.2s ease" }}>
+                                        <label style={labelStyle}>Descripcion (opcional)</label>
+                                        <textarea value={nuevaEspDesc} onChange={e => setNuevaEspDesc(e.target.value)} placeholder="Describe brevemente en que consiste..." rows={2} style={{ ...inputStyle, resize: "none", lineHeight: 1.5 }} />
+                                    </div>
+                                )}
+                                <div>
+                                    <label style={labelStyle}>Icono</label>
+                                    <div style={{ display: "grid", gridTemplateColumns: "repeat(7, 1fr)", gap: 8 }}>
+                                        {ICONOS_DISPONIBLES.map(({ id, icon: Icon, label }) => (
+                                            <button key={id} type="button" onClick={() => setNuevaEspIcono(id)} title={label}
+                                                style={{ padding: "8px", borderRadius: 8, border: `2px solid ${nuevaEspIcono === id ? "#4a8a85" : "#e5e7eb"}`, background: nuevaEspIcono === id ? "#f0f9f7" : "white", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                                                <Icon size={18} color={nuevaEspIcono === id ? "#2a5f5a" : "#6b7280"} />
+                                            </button>
+                                        ))}
+                                    </div>
+                                </div>
+                                <div>
+                                    <label style={labelStyle}>Dirigido a</label>
+                                    <div style={{ display: "flex", gap: 8 }}>
+                                        {(["menores", "adultos", "ambos"] as const).map(op => (
+                                            <button key={op} type="button" onClick={() => setNuevaEspDirigido(op)}
+                                                style={{ flex: 1, padding: "9px", borderRadius: 8, border: `2px solid ${nuevaEspDirigido === op ? "#4a8a85" : "#e5e7eb"}`, background: nuevaEspDirigido === op ? "#f0f9f7" : "white", cursor: "pointer", fontSize: "0.8rem", fontWeight: nuevaEspDirigido === op ? 600 : 400, color: nuevaEspDirigido === op ? "#2a5f5a" : "#6b7280", textTransform: "capitalize", fontFamily: "'Montserrat', sans-serif" }}>
+                                                {op}
+                                            </button>
+                                        ))}
+                                    </div>
+                                </div>
+                            </>
                         )}
-                        <div>
-                            <label style={labelStyle}>Icono</label>
-                            <div style={{ display: "grid", gridTemplateColumns: "repeat(7, 1fr)", gap: 8 }}>
-                                {ICONOS_DISPONIBLES.map(({ id, icon: Icon, label }) => (
-                                    <button key={id} type="button" onClick={() => setNuevaEspIcono(id)} title={label}
-                                        style={{ padding: "8px", borderRadius: 8, border: `2px solid ${nuevaEspIcono === id ? "#4a8a85" : "#e5e7eb"}`, background: nuevaEspIcono === id ? "#f0f9f7" : "white", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center" }}>
-                                        <Icon size={18} color={nuevaEspIcono === id ? "#2a5f5a" : "#6b7280"} />
-                                    </button>
-                                ))}
-                            </div>
-                        </div>
-                        <div>
-                            <label style={labelStyle}>Dirigido a</label>
-                            <div style={{ display: "flex", gap: 8 }}>
-                                {(["menores", "adultos", "ambos"] as const).map(op => (
-                                    <button key={op} type="button" onClick={() => setNuevaEspDirigido(op)}
-                                        style={{ flex: 1, padding: "9px", borderRadius: 8, border: `2px solid ${nuevaEspDirigido === op ? "#4a8a85" : "#e5e7eb"}`, background: nuevaEspDirigido === op ? "#f0f9f7" : "white", cursor: "pointer", fontSize: "0.8rem", fontWeight: nuevaEspDirigido === op ? 600 : 400, color: nuevaEspDirigido === op ? "#2a5f5a" : "#6b7280", textTransform: "capitalize", fontFamily: "'Montserrat', sans-serif" }}>
-                                        {op}
-                                    </button>
-                                ))}
-                            </div>
-                        </div>
+
                         <div style={{ display: "flex", gap: 8 }}>
-                            <button onClick={() => { setShowAgregarEsp(false); setNuevaEspNombre(""); setNuevaEspDesc(""); }}
+                            <button onClick={() => { setShowAgregarEsp(false); setNuevaEspNombre(""); setNuevaEspDesc(""); setEspSeleccionada(""); }}
                                 style={{ flex: 1, padding: "10px", borderRadius: 10, border: "1px solid #d1d5db", background: "white", cursor: "pointer", fontFamily: "'Montserrat', sans-serif", fontSize: "0.88rem", color: "#374151", fontWeight: 500 }}>
                                 Cancelar
                             </button>
@@ -464,7 +512,7 @@ export default function PerfilDoctor() {
                 {/* Cedula principal */}
                 {cedulaPrincipal
                     ? <DocumentoItem doc={cedulaPrincipal} esPrincipal />
-                    : (
+                    : documentos.length === 0 && (
                         <div style={{ padding: "12px 16px", background: "#fef9ec", borderRadius: 10, border: "1px solid #fde68a", marginBottom: 12 }}>
                             <p style={{ margin: "0 0 10px", fontSize: "0.82rem", color: "#92400e" }}>
                                 No se encontro cedula profesional. Por favor subela.

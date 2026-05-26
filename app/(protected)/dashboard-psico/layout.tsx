@@ -24,8 +24,8 @@ interface Doctor {
 }
 
 const NAV_ITEMS = [
-    { icon: <LuLayoutDashboard size={18} />, label: "Dashboard", href: "/dashboard-psico" },
-    { icon: <LuCalendarDays   size={18} />, label: "Mis Citas",  href: "/dashboard-psico/citas" },
+    { icon: <LuLayoutDashboard size={18} />, label: "Inicio", href: "/dashboard-psico" },
+    { icon: <LuCalendarDays size={18} />, label: "Mis Citas", href: "/dashboard-psico/mis-citas" },
     { icon: <LuUsers          size={18} />, label: "Pacientes",  href: "/dashboard-psico/pacientes" },
     { icon: <LuMessageSquare  size={18} />, label: "Mensajes",   href: "/dashboard-psico/mensajes" },
     { icon: <LuClipboardList  size={18} />, label: "Historial",  href: "/dashboard-psico/historial" },

@@ -1,3 +1,4 @@
+// app/(protected)/dashboard-psico/page.tsx
 "use client";
 
 import { useEffect, useState } from "react";
@@ -54,9 +55,63 @@ export default function DashboardDoctor() {
         cargarDatos();
     }, []);
 
+    // 🌟 Obtener la fecha de hoy limpia (sin horas, minutos ni segundos) para comparar justamente los días
+    const hoyReset = new Date();
+    hoyReset.setHours(0, 0, 0, 0);
+
     const citasPendientes  = citas.filter(c => c.estado === "PENDIENTE");
-    const citasAceptadas   = citas.filter(c => c.estado === "ACEPTADA");
     const citasCompletadas = citas.filter(c => c.estado === "COMPLETADA");
+    
+    // 🔍 Mapeo de nombres de meses en español a sus índices numéricos correspondientes (0-11)
+    const dicMeses: { [key: string]: number } = {
+        enero: 0, febrero: 1, marzo: 2, abril: 3, mayo: 4, junio: 5,
+        julio: 6, agosto: 7, septiembre: 8, octubre: 9, noviembre: 10, diciembre: 11
+    };
+
+    // 🌟 FUNCIÓN REFORZADA: Convierte "Martes, 19 de Mayo del 2026" en un objeto Date real y limpio
+    function parsearFechaTexto(fechaTexto: string): Date | null {
+        try {
+            if (!fechaTexto) return null;
+            
+            // Pasamos a minúsculas y limpiamos comas/puntos
+            const limpio = fechaTexto.toLowerCase().replace(/,/g, "");
+            // Buscamos los números presentes (ej: [19, 2026])
+            const numeros = limpio.match(/\d+/g); 
+            
+            if (!numeros || numeros.length < 2) return null;
+            
+            const dia = parseInt(numeros[0], 10);
+            const anio = parseInt(numeros[1], 10);
+            
+            // Encontrar qué mes está escrito dentro de la cadena
+            let mesIndex = 0;
+            for (const nombreMes in dicMeses) {
+                if (limpio.includes(nombreMes)) {
+                    mesIndex = dicMeses[nombreMes];
+                    break;
+                }
+            }
+            
+            // Creamos el objeto Date con los datos extraídos
+            const fechaObjeto = new Date(anio, mesIndex, dia);
+            fechaObjeto.setHours(0, 0, 0, 0);
+            return fechaObjeto;
+        } catch (e) {
+            console.error("Error al parsear la fecha:", e);
+            return null;
+        }
+    }
+
+    // 🌟 FILTRADO SEGURO: Solo citas aceptadas cuya fecha sea igual o posterior a hoyReset
+    const citasAceptadasProximas = citas.filter(c => {
+        if (c.estado !== "ACEPTADA") return false;
+        
+        const fechaCitaObj = parsearFechaTexto(c.fecha);
+        if (!fechaCitaObj) return true; // Si no se puede parsear, la dejamos por precaución
+
+        // Retorna verdadero solo si la fecha de la cita es igual o posterior a hoy
+        return fechaCitaObj.getTime() >= hoyReset.getTime();
+    });
 
     function getDiasDelMes() {
         const year     = mesActual.getFullYear();
@@ -69,7 +124,6 @@ export default function DashboardDoctor() {
 
     const { daysInMonth, offset } = getDiasDelMes();
     const meses = ["Enero","Febrero","Marzo","Abril","Mayo","Junio","Julio","Agosto","Septiembre","Octubre","Noviembre","Diciembre"];
-    const hoy   = new Date().getDate();
 
     if (loading) return (
         <div style={{ minHeight: "100vh", background: "#f8fafb", display: "flex", alignItems: "center", justifyContent: "center" }}>
@@ -77,11 +131,9 @@ export default function DashboardDoctor() {
         </div>
     );
 
-    // ─── Solo el contenido, sin sidebar ni header ───────────────
     return (
         <div style={{ padding: "24px 32px", display: "flex", flexDirection: "column", gap: 24 }}>
 
-            {/* Estilos responsivos solo del contenido */}
             <style>{`
                 @media (max-width: 992px) {
                     .banner-bienvenida {
@@ -106,7 +158,7 @@ export default function DashboardDoctor() {
                 }
             `}</style>
 
-            {/* ── Banner bienvenida ─────────────────────────────── */}
+            {/* Banner bienvenida */}
             <div
                 className="banner-bienvenida"
                 style={{
@@ -135,8 +187,8 @@ export default function DashboardDoctor() {
 
                 <div className="banner-stats" style={{ display: "flex", gap: 16, flexShrink: 0 }}>
                     {[
-                        { value: citasPendientes.length.toString().padStart(2, "0"),  label: "PENDIENTES"  },
-                        { value: citasAceptadas.length.toString().padStart(2, "0"),   label: "ACEPTADAS"   },
+                        { value: citasPendientes.length.toString().padStart(2, "0"),   label: "PENDIENTES"  },
+                        { value: citasAceptadasProximas.length.toString().padStart(2, "0"),   label: "ACEPTADAS"   },
                         { value: citasCompletadas.length.toString().padStart(2, "0"), label: "COMPLETADAS" },
                     ].map(stat => (
                         <div key={stat.label} style={{ background: "rgba(255,255,255,0.15)", borderRadius: 12, padding: "12px 20px", textAlign: "center", minWidth: 110 }}>
@@ -147,12 +199,11 @@ export default function DashboardDoctor() {
                 </div>
             </div>
 
-            {/* ── Grid: citas pendientes + calendario ──────────── */}
+            {/* Grid principal */}
             <div
                 className="grid-principal"
                 style={{ display: "grid", gridTemplateColumns: "1fr minmax(300px, 380px)", gap: 24 }}
             >
-
                 {/* Citas pendientes */}
                 <div style={{ background: "white", borderRadius: 16, padding: "20px 24px", border: "1px solid #e5e7eb", minWidth: 0 }}>
                     <h3 style={{ fontFamily: "'Poppins', sans-serif", fontWeight: 600, fontSize: "1rem", color: "#1a2e2c", margin: "0 0 16px", display: "flex", alignItems: "center", gap: 8 }}>
@@ -240,11 +291,19 @@ export default function DashboardDoctor() {
                         {Array.from({ length: offset }).map((_, i) => <div key={`e${i}`} />)}
                         {Array.from({ length: daysInMonth }).map((_, i) => {
                             const dia   = i + 1;
-                            const esHoy = dia === hoy && mesActual.getMonth() === new Date().getMonth();
-                            const tieneCita = citasAceptadas.some(c => {
-                                const nums = c.fecha.match(/\d+/g);
-                                return nums?.some(n => parseInt(n, 10) === dia);
+                            const esHoy = dia === hoyReset.getDate() && mesActual.getMonth() === hoyReset.getMonth() && mesActual.getFullYear() === hoyReset.getFullYear();
+                            
+                            // Pintar puntitos en los días correctos evaluando el objeto Date parseado de las citas próximas
+                            const tieneCita = citasAceptadasProximas.some(c => {
+                                const fechaCitaObj = parsearFechaTexto(c.fecha);
+                                return (
+                                    fechaCitaObj &&
+                                    fechaCitaObj.getDate() === dia &&
+                                    fechaCitaObj.getMonth() === mesActual.getMonth() &&
+                                    fechaCitaObj.getFullYear() === mesActual.getFullYear()
+                                );
                             });
+
                             return (
                                 <div key={dia} style={{ textAlign: "center", padding: "6px 4px", borderRadius: 8, fontSize: "0.8rem", background: esHoy ? "#2d6560" : "transparent", color: esHoy ? "white" : "#374151", fontWeight: esHoy ? 700 : 400, position: "relative" }}>
                                     {dia}
@@ -254,11 +313,12 @@ export default function DashboardDoctor() {
                         })}
                     </div>
 
+                    {/* Listado inferior dinámico y limpio */}
                     <div style={{ marginTop: 16, borderTop: "1px solid #e5e7eb", paddingTop: 16, display: "flex", flexDirection: "column", gap: 8 }}>
-                        {citasAceptadas.length === 0 ? (
-                            <p style={{ fontSize: "0.78rem", color: "#9ca3af", textAlign: "center" }}>Sin citas aceptadas este mes</p>
+                        {citasAceptadasProximas.length === 0 ? (
+                            <p style={{ fontSize: "0.78rem", color: "#9ca3af", textAlign: "center" }}>Sin citas próximas pendientes</p>
                         ) : (
-                            citasAceptadas.map((cita: Cita) => (
+                            citasAceptadasProximas.map((cita: Cita) => (
                                 <div key={cita.id} style={{ display: "flex", gap: 10, alignItems: "flex-start" }}>
                                     <div style={{ width: 8, height: 8, borderRadius: "50%", background: "#4a8a85", marginTop: 4, flexShrink: 0 }} />
                                     <div>
@@ -270,6 +330,7 @@ export default function DashboardDoctor() {
                         )}
                     </div>
                 </div>
+
             </div>
         </div>
     );

@@ -74,7 +74,7 @@ export default function PacientesPage() {
             const ahora = Date.now();
             const tresMeses = 1000 * 60 * 60 * 24 * 90;
 
-            const filas = await Promise.all(
+            const filas = (await Promise.all(
                 Array.from(mapaUltimaCita.entries()).map(async ([uid, citaInfo]) => {
                     let nombre = "Paciente";
                     let fotoUrl: string | undefined;
@@ -82,18 +82,16 @@ export default function PacientesPage() {
 
                     try {
                         const snap = await getDoc(doc(db, "pacientes", uid));
-                        if (snap.exists()) {
-                            const data = snap.data();
-                            nombre   = data.nombre   ?? nombre;
-                            fotoUrl  = data.fotoUrl  ?? undefined;
-                            edad     = data.edad     ?? undefined;
-                        }
-                    } catch { }
+                        if (!snap.exists()) return null; // cuenta borrada
+                        const data = snap.data();
+                        nombre = data.nombre ?? nombre;
+                        fotoUrl = data.fotoUrl ?? undefined;
+                        edad = data.edad ?? undefined;
+                    } catch { return null; }
 
                     const estado: "ACTIVO" | "PAUSADO" =
                         ahora - citaInfo.timestamp < tresMeses ? "ACTIVO" : "PAUSADO";
 
-                    // Formatear fecha legible
                     let ultimaCitaLabel = citaInfo.fecha;
                     try {
                         const d = new Date(citaInfo.fecha);
@@ -103,17 +101,14 @@ export default function PacientesPage() {
                     } catch { }
 
                     return {
-                        uid,
-                        nombre,
-                        fotoUrl,
-                        edad,
+                        uid, nombre, fotoUrl, edad,
                         especialidad: citaInfo.especialidad,
                         ultimaCita: ultimaCitaLabel,
                         ultimaCitaTimestamp: citaInfo.timestamp,
                         estado,
                     } as PacienteRow;
                 })
-            );
+            )).filter(Boolean) as PacienteRow[];
 
             // Ordenar: activos primero, luego por última cita más reciente
             filas.sort((a, b) => {
