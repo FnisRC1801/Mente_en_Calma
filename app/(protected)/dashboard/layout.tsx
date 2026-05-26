@@ -65,7 +65,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
             )}
 
             {/* Sidebar */}
-            <aside style={{ width: 240, background: "white", borderRight: "1px solid #e5e7eb", display: ocultarSidebar ? "none" : "flex", flexDirection: "column", padding: "24px 0", position: "fixed", height: "100vh", zIndex: 20 }}>
+            <aside style={{ width: 240, background: "white", borderRight: "1px solid #e5e7eb", display: ocultarSidebar ? "none" : "flex", flexDirection: "column", padding: "20px 0", position: "fixed", height: "100vh", zIndex: 20 }}>
                 {/* Logo */}
                 <div style={{ padding: "0 20px 24px", borderBottom: "1px solid #e5e7eb", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
                     <div style={{ display: "flex", alignItems: "center", gap: 10 }}>

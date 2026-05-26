@@ -25,8 +25,9 @@ export async function POST(request: NextRequest) {
         const result = await new Promise<any>((resolve, reject) => {
             cloudinary.uploader.upload_stream(
                 {
-                    folder: tipo === "cedula" ? "cedulas" : "perfiles",
-                    resource_type: esPDF ? "raw" : "image",
+                    // ✅ DESPUÉS
+                    folder: tipo === "cedula" ? "cedulas" : tipo === "documento" ? "documentos" : "perfiles",
+                    resource_type: "auto",
                 },
                 (error, result) => {
                     if (error) { reject(error); return; }

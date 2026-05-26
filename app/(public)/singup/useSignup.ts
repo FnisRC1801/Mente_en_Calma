@@ -5,7 +5,7 @@ import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { createUserWithEmailAndPassword, updateProfile, signInWithPopup, GoogleAuthProvider, sendEmailVerification } from "firebase/auth";
 import { auth, db } from "@/lib/firebase-client";
-import { collection, addDoc, getDocs, doc, setDoc, getDoc, Timestamp } from "firebase/firestore";
+import { collection, addDoc, getDocs, doc, setDoc, getDoc, query, where, Timestamp } from "firebase/firestore";
 
 export function getStrength(pwd: string) {
     const score = [
@@ -27,12 +27,10 @@ export function useSignup() {
     const router = useRouter();
     const [tipo, setTipo] = useState<"paciente" | "doctor">("paciente");
 
-    // Campos comunes
     const [name, setName] = useState("");
     const [email, setEmail] = useState("");
     const [sexo, setSexo] = useState<"M" | "F" | "N/A" | "">("");
 
-    // Estados nuevos para separar la fecha de nacimiento
     const [diaNac, setDiaNac] = useState("");
     const [mesNac, setMesNac] = useState("");
     const [anioNac, setAnioNac] = useState("");
@@ -44,11 +42,9 @@ export function useSignup() {
     const [aceptaTerminos, setAceptaTerminos] = useState(false);
     const [showTerminos, setShowTerminos] = useState(false);
 
-    // Visibilidad contraseñas
     const [showPassword, setShowPassword] = useState(false);
     const [showConfirm, setShowConfirm] = useState(false);
 
-    // Campos doctor
     const [telefono, setTelefono] = useState<number | "">("");
     const [especialidad, setEspecialidad] = useState("");
     const [otraDescripcion, setOtraDescripcion] = useState("");
@@ -69,7 +65,6 @@ export function useSignup() {
 
     const strength = getStrength(password);
 
-    // Efecto para concatenar la fecha automáticamente en formato YYYY-MM-DD
     useEffect(() => {
         if (diaNac && mesNac && anioNac) {
             const diasEnMes = new Date(Number(anioNac), Number(mesNac), 0).getDate();
@@ -84,14 +79,12 @@ export function useSignup() {
     useEffect(() => {
         async function cargarEspecialidades() {
             try {
-                // Intentar cargar del caché primero
                 const cached = localStorage.getItem("especialidades");
                 if (cached) {
                     setEspecialidades(JSON.parse(cached));
                     setCargandoEspecialidades(false);
                     return;
                 }
-                // Si no hay caché, consultar Firestore
                 const snap = await getDocs(collection(db, "especialidades"));
                 const lista = snap.docs.map(d => (d.data() as any).nombre as string);
                 const listaOrdenada = lista.sort();
@@ -168,9 +161,11 @@ export function useSignup() {
 
     async function handleRegister() {
         setError("");
-        if (!name.trim()) { setError("Ingresa tu nombre completo."); return; }
+
+        // ── Validaciones comunes ──────────────────────────────
+        if (!name.trim())  { setError("Ingresa tu nombre completo."); return; }
         if (!email.trim()) { setError("Ingresa tu correo."); return; }
-        if (!sexo) { setError("Selecciona tu sexo."); return; }
+        if (!sexo)         { setError("Selecciona tu sexo."); return; }
 
         if (tipo === "paciente") {
             if (!diaNac || !mesNac || !anioNac) { setError("Selecciona tu fecha de nacimiento completa."); return; }
@@ -178,26 +173,42 @@ export function useSignup() {
             if (edadPaciente < 18) { setError("Debes ser mayor de 18 años para registrarte."); return; }
         }
 
-        if (!modoGoogle && pwdError) { setError(pwdError); return; }
-        if (!modoGoogle && !password) { setError("Ingresa una contraseña."); return; }
-        if (!modoGoogle && password !== confirm) { setError("Las contraseñas no coinciden."); return; }
-        if (!aceptaTerminos) { setError("Acepta los términos y condiciones."); return; }
+        if (!modoGoogle && pwdError)              { setError(pwdError); return; }
+        if (!modoGoogle && !password)             { setError("Ingresa una contraseña."); return; }
+        if (!modoGoogle && password !== confirm)  { setError("Las contraseñas no coinciden."); return; }
+        if (!aceptaTerminos)                      { setError("Acepta los términos y condiciones."); return; }
 
         if (tipo === "doctor") {
-            if (!telefono) { setError("Ingresa tu teléfono."); return; }
-            if (!especialidad) { setError("Selecciona tu especialidad."); return; }
+            if (!telefono)                                         { setError("Ingresa tu teléfono."); return; }
+            if (!especialidad)                                     { setError("Selecciona tu especialidad."); return; }
             if (especialidad === "otra" && !otraEspecialidad.trim()) { setError("Escribe el nombre de tu especialidad."); return; }
-            if (!gradoEstudios) { setError("Selecciona tu grado de estudios."); return; }
-            if (!consultorio.trim()) { setError("Ingresa tu consultorio."); return; }
-            if (!cedulaFile) { setError("Adjunta tu cédula profesional."); return; }
+            if (!gradoEstudios)                                    { setError("Selecciona tu grado de estudios."); return; }
+            if (!consultorio.trim())                               { setError("Ingresa tu consultorio."); return; }
+            if (!cedulaFile)                                       { setError("Adjunta tu cédula profesional."); return; }
         }
 
         setLoading(true);
         try {
             let uid: string;
+
             if (modoGoogle && googleUser) {
+                // ── Registro con Google ───────────────────────
                 uid = googleUser.uid;
             } else {
+                // ── Registro con email/password ───────────────
+
+                // ✅ Verificar email duplicado en AMBAS colecciones
+                const [snapPac, snapDoc] = await Promise.all([
+                    getDocs(query(collection(db, "pacientes"), where("email", "==", email.trim()))),
+                    getDocs(query(collection(db, "doctores"),  where("email", "==", email.trim()))),
+                ]);
+
+                if (!snapPac.empty || !snapDoc.empty) {
+                    setError("Este correo ya está registrado. Inicia sesión.");
+                    setLoading(false);
+                    return;
+                }
+
                 const cred = await createUserWithEmailAndPassword(auth, email, password);
                 if (name.trim()) await updateProfile(cred.user, { displayName: name.trim() });
                 await sendEmailVerification(cred.user);
@@ -284,6 +295,6 @@ export function useSignup() {
         especialidad, setEspecialidad, otraDescripcion, setOtraDescripcion, otraEspecialidad, setOtraEspecialidad,
         mostrarDescripcion, setMostrarDescripcion, gradoEstudios, setGradoEstudios, consultorio, setConsultorio,
         cedulaFileName, especialidades, cargandoEspecialidades, error, setError, loading, enviado, modoGoogle, strength,
-        handlePasswordChange, handleGoogle, handleCedulaFile, handleRegister, calcularEdad
+        handlePasswordChange, handleGoogle, handleCedulaFile, handleRegister, calcularEdad,
     };
 }

@@ -47,6 +47,7 @@ export default function DashboardPaciente() {
     const [showNotif, setShowNotif] = useState(false);
     const [config, setConfig] = useState<{ notif_citas: boolean; notif_mensajes: boolean } | null>(null); // 👈 aquí
     const [notifVistas, setNotifVistas] = useState(false);
+    
     useEffect(() => {
         async function cargarDatos() {
             const user = auth.currentUser;
@@ -121,9 +122,9 @@ export default function DashboardPaciente() {
 
             {/* Header */}
             {/* Header */}
-            <div style={{ background: "white", borderBottom: "1px solid #e5e7eb", padding: "14px 32px", display: "flex", justifyContent: "space-between", alignItems: "center", position: "sticky", top: 0, zIndex: 10, gap: 12 }}>
+            <div style={{ background: "white", borderBottom: "1px solid #e5e7eb", padding: "21px 32px", display: "flex", justifyContent: "space-between", alignItems: "center", position: "sticky", top: 0, zIndex: 10, gap: 12 }}>
                 <h1 style={{ fontFamily: "'Poppins', sans-serif", fontWeight: 700, fontSize: "1.2rem", color: "#1a2e2c", margin: 0 }}>
-                    Panel del Paciente
+                    
                 </h1>
                 <div style={{ display: "flex", gap: 10, alignItems: "center" }}>
 
