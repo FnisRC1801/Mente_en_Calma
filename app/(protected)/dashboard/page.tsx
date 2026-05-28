@@ -69,11 +69,6 @@ export default function DashboardPaciente() {
         cargarDatos();
     }, []);
 
-    async function handleCerrarSesion() {
-        await signOut(auth);
-        await fetch("/api/session", { method: "DELETE" });
-        router.push("/login");
-    }
 
     // Solo citas futuras o de hoy
     const hoyStr = new Date().toISOString().split("T")[0];
@@ -176,10 +171,6 @@ export default function DashboardPaciente() {
                         )}
                     </div>
 
-                    <button onClick={handleCerrarSesion}
-                        style={{ padding: "8px 16px", borderRadius: 10, border: "1px solid #d1d5db", background: "white", color: "#374151", fontSize: "0.82rem", cursor: "pointer", fontFamily: "'Montserrat', sans-serif" }}>
-                        Cerrar sesión
-                    </button>
                     <button onClick={() => router.push("/dashboard/nueva-cita")}
                         style={{ padding: "8px 16px", borderRadius: 10, border: "none", background: "linear-gradient(135deg, #6b9e9a, #2d6560)", color: "white", fontSize: "0.82rem", cursor: "pointer", fontFamily: "'Montserrat', sans-serif", fontWeight: 600 }}>
                         + Agendar Cita
