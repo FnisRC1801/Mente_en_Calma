@@ -7,7 +7,7 @@ import { doc, getDoc } from "firebase/firestore";
 import { signOut } from "firebase/auth";
 import {
     LuLayoutDashboard, LuCalendarDays, LuMessageSquare,
-    LuClipboardList, LuSettings, LuMenu
+    LuClipboardList, LuSettings, LuMenu, LuLogOut
 } from "react-icons/lu";
 
 interface Paciente {
@@ -33,6 +33,12 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         }
         cargar();
     }, []);
+
+    async function handleCerrarSesion() {
+        await signOut(auth);
+        await fetch("/api/session", { method: "DELETE" });
+        router.push("/login");
+    }
 
     const NAV_ITEMS = [
         { icon: <LuLayoutDashboard size={18} />, label: "Inicio", ruta: "/dashboard" },
@@ -98,6 +104,22 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                         );
                     })}
                 </nav>
+
+                {/* Cerrar sesión */}
+                <button onClick={handleCerrarSesion}
+                    style={{
+                        display: "flex", alignItems: "center", gap: 10,
+                        margin: "0 12px 12px", padding: "10px 12px", borderRadius: 10,
+                        border: "none", background: "transparent",
+                        color: "#dc2626", fontFamily: "'Montserrat', sans-serif",
+                        fontWeight: 600, fontSize: "0.88rem", cursor: "pointer",
+                        textAlign: "left", transition: "all 0.15s"
+                    }}
+                    onMouseEnter={e => e.currentTarget.style.background = "#fef2f2"}
+                    onMouseLeave={e => e.currentTarget.style.background = "transparent"}>
+                    <LuLogOut size={18} />
+                    Cerrar sesión
+                </button>
 
                 {/* Usuario */}
                 <div onClick={() => router.push("/dashboard/perfil")}
