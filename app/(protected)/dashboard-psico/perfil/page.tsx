@@ -7,7 +7,7 @@ import { doc, getDoc, updateDoc, arrayUnion, arrayRemove, getDocs, collection, a
 import {
     LuUser, LuMail, LuShield, LuPencil, LuCheck, LuX,
     LuLock, LuCamera, LuPlus, LuTrash2, LuFileText,
-    LuExternalLink, LuUpload, LuBrain, LuHeart, LuHeartPulse,
+    LuExternalLink, LuDownload, LuUpload, LuBrain, LuHeart, LuHeartPulse, // ...aqui agregue "LuDownload"
     LuSparkles, LuBaby, LuSmile, LuActivity, LuBookOpen,
     LuUsers, LuStar, LuZap, LuLeaf, LuSun, LuMoon,
 } from "react-icons/lu";
@@ -374,7 +374,7 @@ export default function PerfilDoctor() {
                         {[
                             { label: "Sexo", valor: doctor?.sexo === "M" ? "Masculino" : doctor?.sexo === "F" ? "Femenino" : "-" },
                             { label: "Grado estudios", valor: doctor?.gradoEstudios ?? "-" },
-                            
+
                         ].map(item => (
                             <div key={item.label} style={{ padding: "12px 14px", background: "#f9fafb", borderRadius: 10 }}>
                                 <p style={{ ...labelStyle, marginBottom: 4 }}>{item.label}</p>
@@ -692,6 +692,16 @@ function DocumentoItem({ doc, esPrincipal = false }: { doc: { nombre: string; ur
         }
         return url;
     }
+
+    // ...aqui agregue esta funcion nueva para forzar la descarga del archivo
+    function getUrlDescarga(url: string) {
+        if (!url) return url;
+        if (url.includes("/upload/")) {
+            return url.replace("/upload/", "/upload/fl_attachment/");
+        }
+        return url;
+    }
+
     return (
         <div style={{ display: "flex", alignItems: "center", gap: 12, padding: "12px 14px", background: esPrincipal ? "#f0f9f7" : "#f9fafb", borderRadius: 10, border: `1px solid ${esPrincipal ? "#b2ddd7" : "#e5e7eb"}`, marginBottom: 8 }}>
             <div style={{ width: 36, height: 36, borderRadius: 8, background: esPrincipal ? "#2d6560" : "#4a8a85", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
@@ -706,6 +716,12 @@ function DocumentoItem({ doc, esPrincipal = false }: { doc: { nombre: string; ur
                     Principal
                 </span>
             )}
+
+            {/* ...aqui agregue el boton de DESCARGAR (icono de flecha hacia abajo) */}
+            <a href={getUrlDescarga(doc.url)} download
+                style={{ padding: "6px", borderRadius: 8, border: "1px solid #e5e7eb", background: "white", display: "flex", cursor: "pointer", textDecoration: "none" }}>
+                <LuDownload size={14} color="#6b7280" />
+            </a>
             <a href={getUrlAbierta(doc.url)} target="_blank" rel="noopener noreferrer"
                 style={{ padding: "6px", borderRadius: 8, border: "1px solid #e5e7eb", background: "white", display: "flex", cursor: "pointer", textDecoration: "none" }}>
                 <LuExternalLink size={14} color="#6b7280" />
